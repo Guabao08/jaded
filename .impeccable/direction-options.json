@@ -1,0 +1,126 @@
+{
+  "title": "Choose ShipBrief’s visual world",
+  "question": "The roll assigned Dispatch Strips. Keep it, choose an alternate, or reroll. This sets the visual language for every current view while keeping the existing workflows intact.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Dispatch Strips",
+      "kicker": "THE ROLL",
+      "lineage": "Flight dispatch boards and paper flight progress strips",
+      "thesis": "Each incoming push travels along a dimensional rail from linked evidence to human review.",
+      "palette": ["#102a43", "#f4f0e6", "#f2b544", "#cf5c45"],
+      "materials": ["enamelled control rail", "machined paper strips", "WebGL amber marker"],
+      "viewport": "A luminous 3D marker travels the dispatch rail above the push queue; selecting a strip opens linked commits beside a reviewable draft.",
+      "risk": "Motion could distract from reading; transitions stay short and tied to real state changes.",
+      "raised": [
+        {"from":"Crouwel Grid Specimen","raise":"A strict underlying grid keeps every strip, evidence row, and review action aligned with typographic precision."},
+        {"from":"Digital Design Canon","raise":"Compact semantic status labels preserve the speed and precision builders expect, without inheriting a generic dark console."},
+        {"from":"Teletext Service","raise":"The board gains disciplined page-like grouping so six views remain legible as one system."},
+        {"from":"Microfiche Reader","raise":"A single material world carries consistently across navigation, evidence, and review surfaces."},
+        {"from":"Notation Diagram Systems","raise":"Push-to-approval progression is shown as a clear sequence, with time and state readable at a glance."},
+        {"from":"Yellow Wayfinding","raise":"One high-contrast amber signal marks the next decision without turning the whole interface into signage."}
+      ],
+      "comp": ".impeccable/mocks/decision/assigned.png"
+    },
+    {
+      "id": "model-pick",
+      "label": "Annotated Release Proof",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "Editorial proof sheets and annotated technical field notes",
+      "thesis": "A release is a dimensional proof: linked code evidence on the margin, marketing copy in the body.",
+      "palette": ["#f4f0e6", "#202623", "#bd4c36", "#59745d"],
+      "materials": ["layered proof paper", "raised annotation tabs", "3D source markers"],
+      "viewport": "A dimensional paper stack turns toward the selected push; margin tabs link draft passages to commits, with review controls at the decision point.",
+      "risk": "Can privilege proofing aesthetics over quick orientation if every surface performs the metaphor.",
+      "comp": ".impeccable/mocks/decision/model-pick.png"
+    },
+    {
+      "id": "challenger-splitflap",
+      "label": "Signals Instruments Split-Flap Concourse",
+      "verdict": "competitive",
+      "lineage": "Rail-station split-flap departure boards",
+      "thesis": "The release queue reads like a live departures board, each change headed somewhere.",
+      "palette": ["#151719", "#f2efe8", "#edae37", "#d45a4b"],
+      "materials": ["hinged 3D flip cells", "nickel axles", "amber state light"],
+      "viewport": "A small 3D split-flap module pivots from PUSH to REVIEW above a sortable queue of fixed-width rows and linked evidence.",
+      "case": "Fuses cleanly: pushes become arrivals and drafts become destinations; strong audience recognition, slightly weaker evidence clarity.",
+      "risk": "Can turn into decorative motion if fixed-cell discipline and readable evidence are lost.",
+      "comp": ".impeccable/mocks/decision/challenger-splitflap.png",
+      "hero": "https://impeccable.style/worlds/cards/signals-instruments-split-flap-concourse-hero.webp"
+    },
+    {
+      "id": "challenger-crouwel",
+      "label": "Crouwel Grid Specimen",
+      "verdict": "competitive",
+      "lineage": "Wim Crouwel’s modular typographic systems",
+      "thesis": "The release history becomes a precise grid that turns code activity into readable structure.",
+      "palette": ["#f5f4ef", "#171a1c", "#e64c36"],
+      "materials": ["extruded grid blocks", "modular letterforms", "single saturated ink"],
+      "viewport": "A 3D grid sculpture moves one highlighted block from commit to draft above a modular evidence-and-review field.",
+      "case": "Fuses cleanly: its grid makes the six views and evidence relationships explicit; audience identification is narrower than the assigned workflow metaphor.",
+      "risk": "Can prioritize typographic display over comfortable long-form draft editing.",
+      "comp": ".impeccable/mocks/decision/challenger-crouwel.png",
+      "hero": "https://impeccable.style/worlds/cards/crouwel-grid-specimen-hero.webp"
+    },
+    {
+      "id": "challenger-wayfinding",
+      "label": "Yellow Wayfinding",
+      "verdict": "competitive",
+      "lineage": "Airport terminal signs and route maps",
+      "thesis": "The next safe step is always unmistakable, from incoming push to draft approval.",
+      "palette": ["#f4d51b", "#111315", "#f4f0e6"],
+      "materials": ["raised acrylic stages", "anodized route rail", "yellow light token"],
+      "viewport": "A 3D route rail stages Push, Evidence, Draft, and Review; a moving light marks the active step above linked evidence and draft.",
+      "case": "Fuses cleanly: excellent action clarity and a memorable signal color; weaker at showing the full evidence detail without a second surface.",
+      "risk": "The high-contrast signal can overwhelm the content if used as a full-screen field.",
+      "comp": ".impeccable/mocks/decision/challenger-wayfinding.png",
+      "hero": "https://impeccable.style/worlds/cards/wayfinding-cartography-signage-terminal-yellow-wayfinding-hero.webp"
+    },
+    {
+      "id": "challenger-console",
+      "label": "Digital Design Canon Dark Console",
+      "verdict": "declined",
+      "lineage": "Developer consoles and code review tools",
+      "palette": ["#17191c", "#ece9e2", "#78d6b0", "#e4b84e"],
+      "materials": ["graphite panels", "syntax accents", "hairline seams"],
+      "case": "Fuses poorly: the incumbent already reads as a generic developer console, so this would not establish a new world.",
+      "kept": "Compact, precise semantic state labels and information density.",
+      "hero": "https://impeccable.style/worlds/cards/digital-design-canon-dark-first-developer-console-hero.webp"
+    },
+    {
+      "id": "challenger-catalog",
+      "label": "Pop Culture Shelf Catalog",
+      "verdict": "declined",
+      "lineage": "Pastel character-goods catalogs and ranked shelves",
+      "palette": ["#f4c7cf", "#f7e9ae", "#d8e4cd", "#25252a"],
+      "materials": ["coated catalog stock", "pastel color blocks", "rank markers"],
+      "case": "Fuses poorly: the shelf and mascot framing obscures the evidence-led review job.",
+      "kept": "A clear, scannable entry hierarchy for new pushes.",
+      "hero": "https://impeccable.style/worlds/cards/pop-culture-shelf-character-goods-catalog-hero.webp"
+    },
+    {
+      "id": "challenger-notation",
+      "label": "Labanotation Score",
+      "verdict": "declined",
+      "lineage": "Laban movement notation and dance scores",
+      "palette": ["#f5f3ed", "#17191b", "#758291"],
+      "materials": ["staff lines", "symbol notation", "paper score"],
+      "case": "Fuses poorly: the notation language is unfamiliar to builders and marketing reviewers.",
+      "kept": "A visible chronological progression from push through review.",
+      "hero": "https://impeccable.style/worlds/cards/notation-diagram-systems-labanotation-hero.webp"
+    }
+  ],
+  "reroll": {"registers":["safer","bolder"]},
+  "steer": true,
+  "buildPath": {"value":"comp","toggle":true},
+  "canon": true,
+  "canonCard": {
+    "label":"The category standard",
+    "thesis":"A clean, conventional SaaS workspace, executed with crisp hierarchy and quiet confidence.",
+    "palette":["#ffffff","#111827","#2563eb"],
+    "materials":["clean grid","quiet surfaces","clear status color"],
+    "viewport":"A familiar app shell puts pending draft review first, with evidence, activity, repositories, and settings one click away.",
+    "risk":"Intentionally familiar; the interface itself carries little distinctive identity.",
+    "comp":".impeccable/mocks/decision/canon.png"
+  }
+}

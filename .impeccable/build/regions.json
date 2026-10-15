@@ -1,0 +1,10 @@
+{
+  "regions": [
+    { "id": "binding", "kind": "chrome", "grid": "A0:J1", "note": "dark application frame and navigation rail" },
+    { "id": "push-tiles", "kind": "control", "grid": "B1:J1", "note": "horizontal row of selectable push records" },
+    { "id": "draft-sheet", "kind": "chrome", "grid": "B2:H8", "container": true, "note": "warm paper draft sheet surface behind separately specified text and controls" },
+    { "id": "draft-title", "kind": "text", "grid": "B3:F3", "note": "large serif draft title" },
+    { "id": "source-leaves", "kind": "control", "grid": "H2:J8", "note": "hinged acetate commit and changed-file source leaves" },
+    { "id": "review-bar", "kind": "chrome", "grid": "A9:J9", "note": "persistent review actions" }
+  ]
+}

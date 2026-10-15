@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#153b39">
+<title>ShipBrief — Turn product changes into grounded, reviewable drafts.</title><meta name="description" content="Turn product changes into grounded, reviewable drafts."><link rel="stylesheet" href="/styles.css?v=2026-10-15-readable-ui-4">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand-row"><div class="brand-mark"><span></span><span></span><span></span></div><span class="brand-name">shipbrief</span><button class="icon-btn collapse-btn" aria-label="Collapse sidebar" title="Collapse sidebar">‹</button></div>
+    <button class="workspace-switch"><span class="workspace-icon">S</span><span class="workspace-label"><b>Studio North</b><small>Free workspace</small></span><span class="chevron">⌄</span></button>
+    <button class="primary-button new-run" id="newRunBtn"><span class="plus">＋</span> New brief <kbd>⌘ K</kbd></button>
+    <nav class="nav-group" aria-label="Main navigation">
+      <div class="nav-label">WORKSPACE</div>
+      <button class="nav-item active" data-view="Overview"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><rect x="3" y="3" width="6" height="6"/><rect x="11" y="3" width="6" height="6"/><rect x="3" y="11" width="6" height="6"/><rect x="11" y="11" width="6" height="6"/></svg></span>Overview</button>
+      <button class="nav-item" data-view="Drafts"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M5 3.5h7l3 3V17H5zM12 3.5v3h3M8 10h4M8 13h4"/></svg></span>Drafts<span class="count-pill" id="draftCount">2</span></button>
+      <button class="nav-item" data-view="Runs"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l3 2"/></svg></span>Run history</button>
+      <button class="nav-item" data-view="Repositories"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="5" cy="4" r="2"/><circle cx="15" cy="6" r="2"/><circle cx="6" cy="16" r="2"/><path d="M5 6v6a4 4 0 0 0 4 4h1M7 4h3a5 5 0 0 1 5 5"/></svg></span>Repositories<span class="nav-dot"></span></button>
+      <button class="nav-item" data-view="Settings"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M3 7c2.3 0 2.3 6 4.7 6s2.3-6 4.6-6S14.7 13 17 13"/><path d="M3 16h14"/></svg></span>Brand voice</button>
+    </nav>
+    <div class="nav-group workflows-group"><div class="nav-label row-between"><span>WORKFLOWS</span><button class="tiny-icon" id="addWorkflow" aria-label="Add workflow">＋</button></div>
+      <button class="nav-item workflow-item" data-view="Workflows"><span class="workflow-glyph violet" aria-hidden="true">R</span>Release radar<span class="status-dot"></span></button>
+      <button class="nav-item workflow-item" data-view="Workflows"><span class="workflow-glyph coral" aria-hidden="true">L</span>Launch moments<span class="status-dot"></span></button>
+      <button class="subtle-add" id="addWorkflowText">＋ &nbsp; New workflow</button>
+    </div>
+    <div class="sidebar-spacer"></div>
+    <div class="usage-card"><div class="row-between"><span>Drafts this month</span><span>2 / 20</span></div><div class="usage-track"><i></i></div><a href="#" data-view-link="Settings">Edit brand voice <span>↗</span></a></div>
+    <button class="profile-button"><span class="avatar">A</span><span class="profile-meta"><b>Alex Morgan</b><small>alex@studionorth.co</small></span><span class="dots">···</span></button>
+  </aside>
+  <main class="main-area">
+    <header class="topbar"><button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open navigation" aria-expanded="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg></button><div class="breadcrumbs"><span>Studio North</span><span class="crumb-sep">/</span><b id="crumbTitle">Overview</b></div><div class="top-actions"><label class="search-box"><svg class="search-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg><input id="globalSearch" type="search" placeholder="Search drafts and runs"><kbd>⌘ K</kbd></label><button class="icon-btn top-icon" aria-label="Help">?</button><button class="top-avatar" aria-label="Alex Morgan profile">A</button></div></header>
+    <div class="view-container" id="viewContainer"></div>
+  </main>
+</div>
+<dialog id="connectDialog" class="dialog"><form method="dialog" class="dialog-close-wrap"><button class="dialog-close" aria-label="Close">×</button></form><div class="dialog-body" id="connectDialogBody"></div></dialog>
+<dialog id="draftDialog" class="dialog wide-dialog"><form method="dialog" class="dialog-close-wrap"><button class="dialog-close" aria-label="Close">×</button></form><div class="dialog-body" id="draftDialogBody"></div></dialog>
+<div class="toast-region" id="toastRegion" aria-live="polite"></div>
+<script src="/app.js"></script>
+</body></html>

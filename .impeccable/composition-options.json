@@ -1,0 +1,41 @@
+{
+  "title": "Choose the ShipBrief composition",
+  "question": "All three screens combine the 3D streaming push wall with the layered reference-manual evidence. Choose the information layout that feels clearest.",
+  "options": [
+    {
+      "id": "wide-wall",
+      "label": "Wall + open evidence layers",
+      "lineage": "Horizontal push wall with a split evidence-and-draft workspace",
+      "thesis": "Scan the push wall, then inspect commits on clear layers beside the draft.",
+      "palette": ["#17191b", "#087976", "#f4f0e7", "#cf513e"],
+      "materials": ["3D glass-and-metal push tiles", "teal binder board", "hinged acetate leaves"],
+      "viewport": "A focused tile lifts from a horizontal row; the selected push opens commit, file, and compare leaves beside a readable draft sheet.",
+      "risk": "Three simultaneous regions may feel dense; the selected tile and draft stay dominant.",
+      "comp": ".impeccable/mocks/decision/hybrid-01.png"
+    },
+    {
+      "id": "vertical-rail",
+      "label": "Vertical push rail + source leaves",
+      "lineage": "A vertical push stack with a central selected record and fanned acetate sources",
+      "thesis": "Keep the queue in reach while linked source layers fan open next to the selected push.",
+      "palette": ["#17191b", "#087976", "#f4f0e7", "#cf513e"],
+      "materials": ["3D glass-and-metal push tiles", "teal binder board", "hinged acetate leaves"],
+      "viewport": "A vertical stack keeps incoming pushes visible; the selected push occupies the center and its sources fan open to the right above review controls.",
+      "risk": "The vertical queue consumes width on smaller screens and will need a compact rail state.",
+      "comp": ".impeccable/mocks/decision/hybrid-02.png"
+    },
+    {
+      "id": "draft-first",
+      "label": "Draft-first reading sheet",
+      "lineage": "An editorial draft sheet with a horizontal push rail and stepped source tabs",
+      "thesis": "Give the draft room to read, with pushes and commit sources immediately nearby.",
+      "palette": ["#17191b", "#087976", "#f4f0e7", "#cf513e"],
+      "materials": ["3D glass-and-metal push tiles", "teal binder board", "hinged acetate leaves"],
+      "viewport": "A narrow push row sits above a large draft sheet; acetate source tabs open along the right margin and review actions stay fixed below.",
+      "risk": "The large draft canvas makes the evidence rail less prominent until a source tab opens.",
+      "comp": ".impeccable/mocks/decision/hybrid-03.png"
+    }
+  ],
+  "steer": true,
+  "buildPath": {"value":"comp","toggle":true}
+}

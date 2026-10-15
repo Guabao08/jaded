@@ -1,0 +1,100 @@
+{
+  "title": "Choose ShipBrief’s visual world",
+  "question": "You asked for a bolder, dimensional direction with real 3D objects and motion. Choose one direction for all six views, or reroll again.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Emission-Line Rail",
+      "kicker": "THE ROLL",
+      "lineage": "Glass spectrogram instruments and calibrated spectral rails",
+      "thesis": "One spectral rail maps a push from incoming code through evidence to a draft for human review.",
+      "palette": ["#16181a", "#e9e7e2", "#dcdc35", "#8b70c9", "#ef9c48"],
+      "materials": ["smoked glass spectrogram", "needle-thin spectral lights", "ash plates"],
+      "viewport": "A small 3D spectrogram sits above one off-center navigation rail; a doubled sodium line slides to Review while the selected push opens into a readable evidence-and-draft plate.",
+      "risk": "The instrumentation can feel too esoteric; every state keeps a plain text label and the 3D object stays secondary.",
+      "raised": [
+        {"from":"Streaming Title-Card Wall","raise":"The selected push lifts forward while surrounding activity dims, making focus unmistakable."},
+        {"from":"Jet-Age Ticket Wallet","raise":"Completed stages remain visible along the rail; progress never erases earlier evidence."},
+        {"from":"Zoo and Gardens Guide Map","raise":"The active route gets a continuous, gently bending path instead of another nested dashboard."}
+      ],
+      "comp": ".impeccable/mocks/decision/emission-rail.png"
+    },
+    {
+      "id": "challenger-acetate",
+      "label": "Acetate Reference Manual",
+      "verdict": "wins",
+      "lineage": "Tabbed software manuals and punched acetate overlays",
+      "thesis": "Commit evidence and its draft sit on clear, hinged layers over one vivid section board.",
+      "palette": ["#f5f2e9", "#0b7775", "#202522", "#bf4837"],
+      "materials": ["translucent acetate leaves", "stepped section tabs", "hard-edged hinge shadows"],
+      "viewport": "A 3D acetate leaf lifts over the selected push; clear source tabs expose linked commits while the draft and human review controls remain fully readable.",
+      "case": "Beats the leader on both axes: technical manuals are familiar to app builders, and layered source leaves make the evidence-to-draft relationship explicit.",
+      "risk": "Layering can create visual overlap; only the selected leaf stays clear and interactive.",
+      "comp": ".impeccable/mocks/decision/acetate-manual.png",
+      "hero": "https://impeccable.style/worlds/cards/rw-manual-acetate-tab-board-hero.webp"
+    },
+    {
+      "id": "challenger-catalog",
+      "label": "Streaming Title-Card Wall",
+      "verdict": "competitive",
+      "lineage": "Streaming catalog rows and expanding title cards",
+      "thesis": "Each push is a focused title card that lifts forward to reveal its evidence and draft.",
+      "palette": ["#111315", "#f2f3f4", "#567fc7"],
+      "materials": ["modeled glass-and-metal objects", "lifted tile shadows", "deep neutral ground"],
+      "viewport": "Horizontal rows of 3D push tiles keep context visible; focus lifts one push and reveals its commits, compare link, draft, and review actions.",
+      "case": "Holds product clarity: the selected push expands into evidence and review, though catalog browsing is less familiar to builders than the spectral rail.",
+      "risk": "The visual catalog could overemphasize decorative objects; each tile remains primarily a commit summary.",
+      "comp": ".impeccable/mocks/decision/streaming-catalog.png",
+      "hero": "https://impeccable.style/worlds/cards/pop-culture-shelf-streaming-title-card-wall-hero.webp"
+    },
+    {
+      "id": "challenger-annual",
+      "label": "Design Annual Plate",
+      "verdict": "competitive",
+      "lineage": "Design annuals and publication plate sections",
+      "thesis": "A dimensional publication plate presents a draft with registration marks for its source evidence.",
+      "palette": ["#f5f4f6", "#16181a", "#dcdcf3"],
+      "materials": ["stacked translucent plates", "registration crosshairs", "embossed editorial seal"],
+      "viewport": "One large 3D proof plate carries the draft; linked commits occupy its margin and the review decision anchors the sheet below.",
+      "case": "Holds product clarity: the plate maps evidence to edited copy well, but publication design speaks less directly to app builders than the leader.",
+      "risk": "A single plate can feel like a read-only artifact unless edit and approval controls stay prominent.",
+      "comp": ".impeccable/mocks/decision/annual-plate.png",
+      "hero": "https://impeccable.style/worlds/cards/design-annual-s-plate-section-hero.webp"
+    },
+    {
+      "id": "challenger-ticket",
+      "label": "Jet-Age Ticket Wallet",
+      "verdict": "declined",
+      "lineage": "Airline ticket wallets, carbon copies, and baggage tags",
+      "palette": ["#102d4b", "#e9e7e2", "#bf342d", "#524363"],
+      "materials": ["layered ticket coupons", "carbon figures", "VOID stamps"],
+      "case": "Fuses weakly: travel booking is less familiar to app builders and coupons suggest a one-time transaction.",
+      "kept": "Progress stays legible as a sequence, and completed stages remain visible instead of disappearing.",
+      "hero": "https://impeccable.style/worlds/cards/vernacular-ephemera-jet-age-ticket-wallet-hero.webp"
+    },
+    {
+      "id": "challenger-zoo",
+      "label": "Zoo and Gardens Guide Map",
+      "verdict": "declined",
+      "lineage": "Fold-out zoo and garden guide maps",
+      "palette": ["#f5f1e4", "#8ed462", "#2c2e2a", "#f5e211"],
+      "materials": ["sculptural map lobes", "folded guide stock", "overshooting motion"],
+      "case": "Fuses weakly: a park-map world does not help builders recognize code evidence or draft review.",
+      "kept": "A continuous route can show the end-to-end push-to-review journey.",
+      "hero": "https://impeccable.style/worlds/cards/aww2-zoo-gardens-guide-map-hero.webp"
+    }
+  ],
+  "reroll": {"registers":["safer","bolder"]},
+  "steer": true,
+  "buildPath": {"value":"comp","toggle":true},
+  "canon": true,
+  "canonCard": {
+    "label":"The category standard",
+    "thesis":"A familiar app workspace puts pending draft review first, with evidence and settings one click away.",
+    "palette":["#ffffff","#111827","#2563eb"],
+    "materials":["quiet SaaS surfaces", "soft-shadowed 3D node model", "clear blue action"],
+    "viewport":"A conventional overview shows the draft queue, selected commit evidence, and a small animated 3D push-to-draft model.",
+    "risk":"Intentionally familiar; the interface itself carries little distinctive identity.",
+    "comp":".impeccable/mocks/decision/canon.png"
+  }
+}

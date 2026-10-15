@@ -1,0 +1,82 @@
+<!doctype html>
+<html data-theme="luxury">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Push → Marketing | Product & Technical Plan</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.5.19/daisyui.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.5.19/themes.css">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.4/dist/index.global.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box} :where(.grid,.flex,[style*="display: grid"],[style*="display:grid"],[style*="display: flex"],[style*="display:flex"])>*{min-width:0} :where(p,h1,h2,h3,h4,li,td,th,.badge,code){overflow-wrap:anywhere} :where(img,svg,canvas){max-width:100%;height:auto}
+html{scroll-behavior:smooth} body{background:var(--color-base-200);color:var(--color-base-content)} .shell{max-width:1160px;margin:auto;padding:28px 20px 80px}.eyebrow{letter-spacing:.14em;text-transform:uppercase;font-size:.72rem;font-weight:800;color:var(--color-primary)} .hero-card{background:linear-gradient(130deg,var(--color-base-100),var(--color-base-200));border:1px solid color-mix(in oklab,var(--color-base-content) 12%,transparent)} .section{margin-top:44px}.section-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:16px}.section-head h2{font-size:1.5rem;font-weight:750;letter-spacing:-.03em}.small{font-size:.88rem;line-height:1.55;color:color-mix(in oklab,var(--color-base-content) 72%,transparent)}.mermaid{overflow:auto;background:var(--color-base-100);border-radius:16px;padding:18px;border:1px solid color-mix(in oklab,var(--color-base-content) 10%,transparent)}.risk{border-left:3px solid var(--color-warning)}.source{font-size:.76rem}.source a{color:var(--color-primary);text-decoration:underline;text-underline-offset:2px}
+</style>
+</head>
+<body><main class="shell">
+<section class="hero hero-card rounded-3xl"><div class="hero-content w-full justify-start py-10 md:py-14"><div class="max-w-4xl"><div class="eyebrow">Product sketch · October 2026</div><h1 class="mt-3 text-4xl md:text-6xl font-black tracking-tight">Turn meaningful pushes<br>into marketing drafts.</h1><p class="mt-5 max-w-3xl text-lg opacity-80">Connect a GitHub repo. When a meaningful change lands, explain it in customer language and draft channel-ready assets—with evidence and a human approval step.</p><div class="mt-6 flex flex-wrap gap-2"><span class="badge badge-primary">MVP: draft + review</span><span class="badge badge-outline">No auto-publishing</span><span class="badge badge-outline">No ad spend</span></div></div></div></section>
+<section class="section grid md:grid-cols-3 gap-4">
+<div class="card card-border bg-base-100"><div class="card-body"><div class="eyebrow">The user problem</div><h2 class="card-title">Shipping is frequent. Announcing it is not.</h2><p class="small">Small teams push product improvements but lose the context, time, or copywriting capacity to turn them into useful customer communication.</p></div></div>
+<div class="card card-border bg-base-100"><div class="card-body"><div class="eyebrow">The promise</div><h2 class="card-title">A change-aware marketing copilot</h2><p class="small">Convert selected pushes into explainable, editable release notes and campaign drafts that match the product’s voice and audience.</p></div></div>
+<div class="card card-border bg-base-100"><div class="card-body"><div class="eyebrow">North-star outcome</div><h2 class="card-title">Useful drafts approved per team</h2><p class="small">Measure the share of generated drafts that a person edits and approves. Raw draft volume rewards noise.</p></div></div>
+</section>
+<section class="section"><div class="section-head"><div><div class="eyebrow">System flow</div><h2>From GitHub event to approved asset</h2></div><span class="badge badge-soft badge-info">Proposed architecture</span></div>
+<div class="mermaid">flowchart TD
+  A[GitHub App: push event] --> B[Webhook endpoint: verify signature + dedupe]
+  B --> C[(Event store + job queue)]
+  C --> D[Worker: filter + enrich change]
+  D --> E[LLM: classify + draft with evidence]
+  E --> F[(Drafts + source links)]
+  F --> G[Review inbox: edit / approve / reject]
+  G --> H[Export copy or publish later]
+  D -. optional context .-> I[Commit compare + linked PR + repo brief]
+  J[Brand voice + audience + channel settings] --> E
+  K[Human approval] --> H</div>
+<p class="small mt-3">Keep webhook intake fast and deterministic. Do enrichment and generation asynchronously so a slow model call cannot make GitHub retry the delivery.</p></section>
+<section class="section"><div class="section-head"><div><div class="eyebrow">Product scope</div><h2>Build the review loop before channel integrations</h2></div></div>
+<div class="grid lg:grid-cols-2 gap-4">
+<div class="card card-border bg-base-100"><div class="card-body"><h3 class="card-title">MVP</h3><ul class="list-disc pl-5 small space-y-2"><li>Install a GitHub App; choose repositories and watched branches.</li><li>Set product description, target audience, tone, forbidden claims, and preferred channels.</li><li>For each qualifying push, produce a short “what changed / who benefits / why now” summary plus cited commit or PR evidence.</li><li>Generate a release note, social post, and one email/launch blurb; let users edit, regenerate, approve, reject, or copy/export.</li><li>Show status, triggering commit, changed files, confidence, and generation errors in an inbox.</li></ul></div></div>
+<div class="card card-border bg-base-100"><div class="card-body"><h3 class="card-title">Later, after validation</h3><ul class="list-disc pl-5 small space-y-2"><li>Scheduled digests that bundle related pushes into one announcement.</li><li>Slack review notifications and team roles/approval rules.</li><li>Social/email publishing integrations, each requiring explicit per-channel approval.</li><li>Campaign performance feedback to learn which drafts get used and perform well.</li><li>Ad creative variants and paid-media integrations only after a separate budget and approval control exists.</li></ul></div></div>
+</div></section>
+<section class="section"><div class="section-head"><div><div class="eyebrow">Implementation path</div><h2>Three thin, testable milestones</h2></div></div>
+<ul class="steps steps-vertical lg:steps-horizontal w-full"><li class="step step-primary">Connect + capture</li><li class="step">Summarize + draft</li><li class="step">Review + learn</li></ul>
+<div class="grid md:grid-cols-3 gap-4 mt-5">
+<div class="card bg-base-100"><div class="card-body"><span class="badge badge-primary">1 · Foundation</span><h3 class="font-bold text-lg">Reliable event intake</h3><p class="small">GitHub App auth/install flow; subscribe to push; accept only configured branches; verify HMAC-SHA256 on raw bytes; persist delivery ID and enqueue; return 2xx promptly. Handle duplicate deliveries, deleted branches, force pushes, and bot/CI commits.</p></div></div>
+<div class="card bg-base-100"><div class="card-body"><span class="badge badge-secondary">2 · Drafts</span><h3 class="font-bold text-lg">Grounded generation</h3><p class="small">Fetch compare/commit details and linked PR when available. Filter likely non-user-facing changes; classify impact; generate structured channel drafts with evidence references. If evidence is weak, ask for context or produce no campaign.</p></div></div>
+<div class="card bg-base-100"><div class="card-body"><span class="badge badge-accent">3 · Feedback</span><h3 class="font-bold text-lg">Human review</h3><p class="small">Build the draft inbox and editable detail view. Track edit/approve/reject and reasons. Start with copy/export; add publication only after quality and approval behavior are proven.</p></div></div>
+</div></section>
+<section class="section"><div class="section-head"><div><div class="eyebrow">Technical choices</div><h2>A lean stack that leaves room to grow</h2></div></div>
+<div class="overflow-x-auto rounded-box border border-base-content/10 bg-base-100"><table class="table table-zebra"><thead><tr><th>Area</th><th>Recommendation</th><th>Why / implementation note</th></tr></thead><tbody>
+<tr><td>GitHub integration</td><td>GitHub App</td><td>Install per user/org and selected repos; request read-only Contents and Metadata, plus Pull requests read if PR context is needed. Subscribe to the minimum events.</td></tr>
+<tr><td>Backend</td><td>TypeScript API + worker</td><td>One webhook route plus asynchronous worker. A managed queue is enough at MVP scale; keep retries and dead-letter visibility.</td></tr>
+<tr><td>Persistence</td><td>Postgres</td><td>Tenants, installations, repo settings, deliveries, push jobs, drafts, approvals, and encrypted credentials. Unique delivery ID and repo/SHA key provide idempotency.</td></tr>
+<tr><td>Generation</td><td>LLM behind a provider adapter</td><td>Input is a bounded change summary, allowed repo context, brand brief, and output schema. Save prompt/model version and evidence with every draft.</td></tr>
+<tr><td>Frontend</td><td>Web app review inbox</td><td>Connect repos → configure signal rules → review drafts. If the existing repo later supplies a framework, follow it; this workspace currently has no app code or stack.</td></tr>
+</tbody></table></div></section>
+<section class="section grid lg:grid-cols-2 gap-4">
+<div class="card card-border bg-base-100"><div class="card-body"><div class="eyebrow">Data + reliability</div><h2 class="card-title">Treat every push as untrusted, retryable input</h2><ul class="list-disc pl-5 small space-y-2"><li>Persist delivery ID before acknowledging; repeated delivery must not create duplicate drafts.</li><li>Use a durable queue, bounded retries with backoff, and a visible failed-job state. GitHub does not automatically redeliver failed webhook deliveries.</li><li>Do not treat commit messages as instructions. Send only necessary context to the model; exclude secrets, generated files, and sensitive paths.</li><li>Store installation tokens encrypted and mint short-lived tokens when fetching private repo context. Revoke access on uninstall.</li><li>Keep draft evidence links and state transitions auditable. Support retention/deletion by workspace.</li></ul></div></div>
+<div class="card card-border bg-base-100 risk"><div class="card-body"><div class="eyebrow">Main risks</div><h2 class="card-title">Trust and signal quality beat automation volume</h2><div class="grid gap-3"><div><span class="badge badge-warning">Noise</span><p class="small mt-1">A push can be ref deletion, docs-only work, an automated version bump, or a force push. Use branch/ref filters, file-path rules, and “marketing-worthy” classification; allow manual regenerate.</p></div><div><span class="badge badge-warning">False claims</span><p class="small mt-1">Code does not explain customer value on its own. Ground drafts in PR descriptions/product brief; quote evidence and flag unsupported benefits.</p></div><div><span class="badge badge-warning">Sensitive code</span><p class="small mt-1">Private source may contain credentials or customer data. Prefer metadata/PR text first, minimize fetched diff, redact secrets, and offer controls for whether code reaches the model provider.</p></div></div></div></div>
+</section>
+<section class="section"><div class="section-head"><div><div class="eyebrow">Decisions for the first prototype</div><h2>Defaults I recommend</h2></div></div>
+<div class="grid md:grid-cols-3 gap-4">
+<div class="card bg-base-100"><div class="card-body"><span class="badge badge-success">Recommend</span><h3 class="font-bold">Main branch first</h3><p class="small">Only create drafts from pushes to the default branch at first; let teams broaden branch rules later.</p></div></div>
+<div class="card bg-base-100"><div class="card-body"><span class="badge badge-success">Recommend</span><h3 class="font-bold">Review before publishing</h3><p class="small">Generate automatically, but require a human to approve and publish. MVP ends at copy/export.</p></div></div>
+<div class="card bg-base-100"><div class="card-body"><span class="badge badge-success">Recommend</span><h3 class="font-bold">One push → one draft bundle</h3><p class="small">Keep assets together for traceability. Add digest mode for teams whose push volume makes individual bundles noisy.</p></div></div>
+</div>
+<div class="alert alert-info mt-5"><span><strong>Open product question:</strong> who is the first buyer and what is the first output they need—SaaS founders needing launch copy, developer-relations teams needing release notes, or agencies creating client content? Pick one audience and one channel for the first quality bar.</span></div></section>
+<section class="section"><div class="section-head"><div><div class="eyebrow">Sources checked</div><h2>GitHub implementation facts</h2></div></div>
+<div class="card bg-base-100"><div class="card-body source small"><ul class="list-disc pl-5 space-y-2">
+<li>GitHub App webhooks support push notifications and require the app to request permissions relevant to subscribed events: <a href="https://docs.github.com/en/enterprise-cloud%40latest/apps/creating-github-apps/registering-a-github-app/using-webhooks-with-github-apps">Using webhooks with GitHub Apps</a>.</li>
+<li>Webhook security uses a secret and the <code>X-Hub-Signature-256</code> HMAC-SHA256 header over the unmodified payload: <a href="https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries">Validating webhook deliveries</a>.</li>
+<li>Respond with 2xx within 10 seconds, enqueue longer processing, and use <code>X-GitHub-Delivery</code> for delivery identity: <a href="https://docs.github.com/en/webhooks/using-webhooks/best-practices-for-using-webhooks">Webhook best practices</a>.</li>
+<li>Failed webhook deliveries are not automatically redelivered; implement recovery visibility and retry/redelivery: <a href="https://docs.github.com/en/webhooks/using-webhooks/handling-failed-webhook-deliveries">Handling failed webhook deliveries</a>.</li>
+<li>Push payload includes before/after SHAs and up to 2,048 commit entries; deleted refs are included in push semantics, so handle them explicitly: <a href="https://docs.github.com/en/webhooks/webhook-events-and-payloads#push">Push event payload</a>.</li>
+<li>Commit compare endpoint supports fetching the change summary between two SHAs: <a href="https://docs.github.com/en/rest/commits/commits#compare-two-commits">Compare two commits</a>.</li>
+</ul><p class="mt-3">Assumption: “automatically create ads and marketing” means create editable marketing assets from code changes. Automated publication and paid ad spend are intentionally out of the initial product scope.</p></div></div></section>
+<footer class="mt-10 border-t border-base-content/10 pt-5 small">Working sketch · This repo was empty at review time, so the technology choices are recommendations rather than descriptions of an existing application.</footer>
+</main>
+<script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.esm.min.mjs';
+const diagrams=[...document.querySelectorAll('.mermaid')].map(el=>({el,src:el.textContent}));let applied;
+async function render(){const bg=getComputedStyle(document.documentElement).backgroundColor;const dark=matchMedia('(prefers-color-scheme: dark)').matches||document.documentElement.dataset.theme==='night'||document.documentElement.dataset.theme==='dracula'||document.documentElement.dataset.theme==='business'||document.documentElement.dataset.theme==='black'||document.documentElement.dataset.theme==='abyss'||document.documentElement.dataset.theme==='dim'||document.documentElement.dataset.theme==='coffee'||document.documentElement.dataset.theme==='luxury';const theme=dark?'dark':'default';if(theme===applied)return;mermaid.initialize({startOnLoad:false,theme,securityLevel:'strict'});for(const {el,src} of diagrams){el.removeAttribute('data-processed');el.textContent=src}await mermaid.run({nodes:diagrams.map(d=>d.el)});applied=theme}
+window.addEventListener('load',()=>render().catch(console.error),{once:true});new MutationObserver(()=>render().catch(console.error)).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{applied=undefined;render().catch(console.error)});
+</script>
+</body></html>

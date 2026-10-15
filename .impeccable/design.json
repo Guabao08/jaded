@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-15T19:39:16Z",
+  "title": "Design System: ShipBrief",
+  "extensions": {
+    "colorMeta": {
+      "forest-binding": { "role": "primary", "displayName": "Binding Forest", "canonical": "#153b39", "tonalRamp": ["#071816", "#102925", "#183b36", "#245149", "#386c61", "#5c887d", "#89a99d", "#bfd2c6"] },
+      "forest-stage": { "role": "secondary", "displayName": "Push Forest", "canonical": "#173e3a", "tonalRamp": ["#071817", "#0f2926", "#193c38", "#25524c", "#3b6c65", "#60877f", "#8eaaa1", "#c2d4c9"] },
+      "terracotta": { "role": "tertiary", "displayName": "Terracotta", "canonical": "#c94f39", "tonalRamp": ["#34120b", "#612316", "#873322", "#a6422f", "#c94f39", "#db725d", "#e99a86", "#f4cabc"] },
+      "paper-ground": { "role": "neutral", "displayName": "Paper Ground", "canonical": "#e9e5dc", "tonalRamp": ["#171613", "#393730", "#605d54", "#8b877c", "#b5b0a3", "#d1ccbf", "#e9e5dc", "#faf7ef"] },
+      "paper-sheet": { "role": "neutral", "displayName": "Paper Sheet", "canonical": "#f4f0e7", "tonalRamp": ["#1c1a16", "#403d35", "#6b675d", "#969184", "#bdb8aa", "#d9d4c8", "#eee9de", "#faf7ef"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Reading Display", "purpose": "Page titles and the selected draft title." },
+      "body": { "displayName": "Working Sans", "purpose": "Navigation, supporting copy, and controls." },
+      "label": { "displayName": "Wayfinding Label", "purpose": "Compact source, status, and channel labels." },
+      "mono": { "displayName": "Evidence Mono", "purpose": "Commit hashes and technical identifiers only." }
+    },
+    "shadows": [
+      { "name": "sheet-lift", "value": "0 8px 19px #26382d15", "purpose": "Separate the main paper draft sheet from the page ground." },
+      { "name": "tile-depth", "value": "0 13px 18px #0f25243b", "purpose": "Add material depth to the push tile face." },
+      { "name": "leaf-overlap", "value": "0 5px 10px #20392d19", "purpose": "Lift the overlapping acetate source leaves." }
+    ],
+    "motion": [
+      { "name": "tile-lift", "value": "transform .32s cubic-bezier(.18,.72,.2,1)", "purpose": "One restrained dimensional response when a push tile is hovered or focused." },
+      { "name": "leaf-hinge", "value": "transform .2s ease-out", "purpose": "Subtle opening movement for evidence leaves." }
+    ],
+    "breakpoints": [
+      { "name": "tablet", "value": "820px" },
+      { "name": "mobile", "value": "620px" }
+    ]
+  },
+  "components": [
+    { "name": "Primary Button", "kind": "button", "refersTo": "button-primary", "description": "Terracotta action for creating or confirming a draft workflow action.", "html": "<button class=\"ds-btn-primary\">New brief</button>", "css": ".ds-btn-primary{background:#d66b52;color:#251d19;border:0;border-radius:3px;height:38px;padding:0 11px;font:700 12px 'DM Sans',sans-serif;transition:transform .16s cubic-bezier(.2,.8,.2,1),background .16s}.ds-btn-primary:hover{background:#e27a60;transform:translateY(-2px)}.ds-btn-primary:focus-visible{outline:2px solid #173e3a;outline-offset:3px}" },
+    { "name": "Secondary Button", "kind": "button", "refersTo": "button-primary", "description": "Quiet paper control for a secondary action.", "html": "<button class=\"ds-btn-secondary\">Manage repositories</button>", "css": ".ds-btn-secondary{background:#f4f0e7;color:#29433d;border:1px solid #a9b0a1;border-radius:2px;height:34px;padding:0 11px;font:600 12px 'DM Sans',sans-serif}.ds-btn-secondary:hover{background:#e8e2d6}.ds-btn-secondary:focus-visible{outline:2px solid #356c68;outline-offset:3px}" },
+    { "name": "Text Field", "kind": "input", "refersTo": "input", "description": "Editable field on raised paper.", "html": "<input class=\"ds-input\" placeholder=\"Search drafts and runs\" />", "css": ".ds-input{background:#faf7ef;color:#1b2826;border:1px solid #bdb7aa;border-radius:2px;padding:11px 12px;font:400 12px 'DM Sans',sans-serif}.ds-input::placeholder{color:#53645e}.ds-input:focus-visible{outline:2px solid #356c68;outline-offset:2px}" },
+    { "name": "Status Tag", "kind": "chip", "refersTo": "chip", "description": "Compact status text with a quiet filled state.", "html": "<span class=\"ds-status\">Needs review</span>", "css": ".ds-status{display:inline-flex;align-items:center;background:#f2e2c6;color:#754c13;border-radius:2px;padding:4px 7px;font:600 11px 'DM Sans',sans-serif}" },
+    { "name": "Navigation Item", "kind": "nav", "refersTo": "sheet", "description": "Paper-selected destination inside the dark green binding rail.", "html": "<button class=\"ds-nav-item\"><svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><rect x=\"3\" y=\"3\" width=\"6\" height=\"6\"/><rect x=\"11\" y=\"3\" width=\"6\" height=\"6\"/><rect x=\"3\" y=\"11\" width=\"6\" height=\"6\"/><rect x=\"11\" y=\"11\" width=\"6\" height=\"6\"/></svg>Overview</button>", "css": ".ds-nav-item{display:flex;align-items:center;gap:10px;width:100%;height:37px;padding:0 10px;border:0;border-radius:2px;background:#f0eadd;color:#193b38;text-align:left;font:500 12px 'DM Sans',sans-serif;cursor:pointer}.ds-nav-item svg{width:15px;height:15px;fill:none;stroke:#a34130;stroke-width:1.45}.ds-nav-item:focus-visible{outline:2px solid #d66b52;outline-offset:2px}" },
+    { "name": "Draft Sheet", "kind": "custom", "refersTo": "sheet", "description": "Warm paper reading surface for a draft and its source context.", "html": "<article class=\"ds-sheet\"><p class=\"ds-label\">LINKEDIN / DRAFT</p><h2>Search results now include recent projects</h2><p>A draft based on the push. Review its linked source before sharing.</p></article>", "css": ".ds-sheet{background:#f4f0e7;color:#1b2826;border:1px solid #d4cdbf;border-radius:2px;padding:26px 32px;box-shadow:0 8px 19px #26382d15}.ds-sheet h2{font:400 38px/1.05 'Frank Ruhl Libre',Georgia,serif;color:#173e3a}.ds-sheet p{font:400 14px/1.7 Georgia,serif;color:#354940}.ds-sheet .ds-label{font:600 11px/1.3 'DM Sans',sans-serif;letter-spacing:.13em;color:#4a6359}" },
+    { "name": "Push Tile", "kind": "custom", "refersTo": "sheet", "description": "Small dimensional tile that makes an incoming push easy to scan.", "html": "<button class=\"ds-tile\"><span>studio-north/product</span><strong>Update settings navigation</strong><code>a81fd2c</code></button>", "css": ".ds-tile{display:flex;flex-direction:column;gap:12px;min-height:150px;padding:14px;text-align:left;color:#fff7e9;background:#28635c;border:1px solid #6d9c8c;box-shadow:0 13px 18px #0f25243b;font:400 11px 'DM Mono',monospace;transform:perspective(900px) translateZ(16px);transition:transform .32s cubic-bezier(.18,.72,.2,1)}.ds-tile strong{font:600 17px/1.15 'Frank Ruhl Libre',Georgia,serif}.ds-tile code{margin-top:auto;color:#d8e7dc}.ds-tile:hover,.ds-tile:focus-visible{transform:perspective(900px) translateY(-7px) rotateX(2deg) rotateY(-3deg)}" }
+  ],
+  "narrative": {
+    "northStar": "The Push Ledger",
+    "overview": "ShipBrief should feel like a working release desk: incoming pushes are easy to scan, a draft gets the space of a reading sheet, and its evidence stays within reach on layered source leaves. The interface uses the contrast between a dark green binding and warm paper to make the workflow memorable without turning every region into a decorative card.\n\nThe first viewport demonstrates the real job: choose a push, read the draft, and inspect linked sources before approving. Demo data is identified as illustrative. Copy must not imply customer outcomes, performance, live integrations, AI generation, or publishing unless the product actually supports them.",
+    "keyCharacteristics": ["Deep green navigation and push surfaces", "Warm paper draft sheets with a literary display face", "Compact, precise labels and evidence metadata", "Selective dimensionality in push tiles and acetate leaves", "Review remains a human action"],
+    "rules": [{ "name": "The Evidence Stays Close Rule", "body": "Source layers are visible beside a draft or one action away; never detach the draft from its commit context.", "section": "components" }],
+    "dos": ["Do keep real changes, commit identifiers, and source links connected to each draft.", "Do label sample data and distinguish a draft from published content.", "Do reserve 3D transforms and acetate layering for pushes and evidence.", "Do preserve readable ink contrast on both paper and forest surfaces."],
+    "donts": ["Don't add performance claims, customers, or launch details absent from product evidence.", "Don't imply that approval publishes a draft.", "Don't scatter glows, gradients, pills, or ornamental icons across ordinary controls.", "Don't use monospace as a generic technical costume or serif for dense metadata."]
+  }
+}

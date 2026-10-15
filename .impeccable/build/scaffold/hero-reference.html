@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Scaffold reference: hybrid-03.png</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400&display=swap">
+  <link rel="stylesheet" href="layout.css">
+  <style>html,body{margin:0}body{background:#191e21}.region{box-sizing:border-box}.region.text p{white-space:pre-wrap}</style>
+</head>
+<body>
+<!-- Reference only. Every region sits at its measured box inside a comp-aspect frame. Take the boxes (layout.css), keep your own semantic structure. -->
+<main class="comp-frame" style="max-width:1536px">
+  <div class="r-binding region chrome" data-region="binding"><!-- dark application frame and navigation rail --></div>
+  <div class="r-push-tiles region control" data-region="push-tiles"><!-- horizontal row of selectable push records: rebuild the control's chrome from the crop (comp-spec.mjs --crop push-tiles); its ink box, border, fill, radius, and label size are the comp's --></div>
+  <div class="r-draft-sheet region chrome" data-region="draft-sheet"><!-- warm paper draft sheet surface behind separately specified text and controls --></div>
+  <div class="r-draft-title region text" data-region="draft-title"><!-- large serif draft title --><p style="font-size:var(--r-draft-title-font);font-family:var(--r-draft-title-family),sans-serif;font-weight:var(--r-draft-title-weight);line-height:1.05;margin:0">draft-title</p></div>
+  <div class="r-source-leaves region control" data-region="source-leaves"><!-- hinged acetate commit and changed-file source leaves: rebuild the control's chrome from the crop (comp-spec.mjs --crop source-leaves); its ink box, border, fill, radius, and label size are the comp's --></div>
+  <div class="r-review-bar region chrome" data-region="review-bar"><!-- persistent review actions --></div>
+</main>
+</body>
+</html>
