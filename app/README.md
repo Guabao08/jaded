@@ -24,7 +24,7 @@ Phase 0 has no models and opens no database connection, so the app starts withou
 
 | Command                | What it does                              |
 | ---------------------- | ----------------------------------------- |
-| `npm run typecheck`    | TypeScript, no emit                       |
+| `npm run typecheck`    | Route types, then TypeScript (no emit)    |
 | `npm run lint`         | ESLint                                    |
 | `npm run format:check` | Prettier (`npm run format` to fix)        |
 | `npm test`             | Vitest unit tests                         |
