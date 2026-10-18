@@ -102,7 +102,7 @@ Each phase below lists the security items it must prove.
 ---
 
 ## Phase 0 — Foundation and security baseline
-Status: [x] done
+Status: [ ] built, one check left (fake-secret CI canary, see notes)
 
 **Goal:** an empty but production-shaped app that is safe to build on.
 
@@ -126,6 +126,7 @@ Status: [x] done
 - Tests: 43 Vitest unit tests (crypto incl. tampering of every part, redaction, env, proxy) and 2 Playwright tests (page loads with no CSP violations, headers present).
 - CI: `.github/workflows/ci.yml` (type-check, lint, Prettier, tests, `npm audit --audit-level=high`, build, Playwright, start-refusal check, gitleaks over full history) and `codeql.yml`. Dependabot for npm and Actions. Pre-commit hook in `.githooks/` (enabled by `npm install`) runs gitleaks; it blocks the commit if gitleaks is not installed, unless `GITLEAKS_SKIP=1`.
 - Choices: `cacheComponents`/partial prefetching are off because Next.js documents them as incompatible with nonce CSPs. `eslint-config-next` is replaced by `typescript-eslint` + `eslint-plugin-react-hooks` because its glob dependency has an unfixed high advisory that fails `npm audit`. HTTP is allowed in production builds only for loopback `APP_URL`s (local `next start`, e2e).
+- Verified: CI is green on GitHub (CI and CodeQL workflows), and every CI step also passed on a fresh local clone. Not yet shown: that a committed fake secret fails CI. The gitleaks job scans the full history and fails on any finding (`--exit-code 1`), but pushing a canary branch with a fake token was not done. To finish: push a branch with a commit containing a made-up `ghp_` + 36 random letters/digits token, confirm the "Secret scan" job fails, then delete the branch. Then mark this phase done.
 - Deferred: no database is needed yet, so nothing connects to Postgres in Phase 0 (no local Postgres or Docker on the owner's machine; `npx prisma dev` is an option for Phase 1). At-rest encryption, the secret manager and HTTPS are confirmed when hosting is set up. GitHub private vulnerability reporting must be turned on in repo settings for `SECURITY.md`'s reporting link.
 
 ---
