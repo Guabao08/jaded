@@ -12,13 +12,15 @@ This section grows as features are built. Items marked _planned_ are not stored 
 
 | Data | Why | Where | Protection |
 | --- | --- | --- | --- |
-| Account email and name (_planned, Phase 1_) | Sign-in | Postgres | Encrypted at rest by the database provider |
-| Sign-in sessions (_planned, Phase 1_) | Keep users signed in | Postgres, browser cookie | `httpOnly`, `Secure`, `SameSite=Lax` cookie; rotated on login; expire |
-| OAuth access and refresh tokens for GitHub, Meta, Google, TikTok (_planned_) | Read repos, publish posts | Postgres | App-level envelope encryption (below), on top of at-rest encryption |
-| GitHub App credentials, webhook secrets (_planned_) | Receive pushes | Host secret manager | Never in the database or code |
+| GitHub numeric ID, login, display name, avatar URL | Sign-in and showing who is signed in | Postgres (`User`) | Encrypted at rest by the database provider. No email is collected. |
+| GitHub account link (provider + numeric ID only) | Find the user on their next sign-in | Postgres (`Account`) | OAuth access/refresh tokens from sign-in are discarded, never stored |
+| Sign-in sessions | Keep users signed in | Postgres (`Session`), browser cookie | Cookie `__Secure-jaded.session`: `httpOnly`, `Secure`, `SameSite=Lax`, expires after 7 days. The database stores only a SHA-256 hash of the session token. Any session presented at login is revoked and a new one issued. |
+| Workspaces and memberships | A private workspace per user | Postgres | Every read goes through the user's membership (`app/src/lib/workspaces.ts`); another user's workspace returns 404 |
+| Audit log: sign-ins, denied sign-ins, sign-outs, session revocations, with IP and user agent | Security investigation | Postgres (`AuditLog`) | Metadata passes through the log redaction helper; only the app writes it |
+| OAuth tokens for Meta, Google, TikTok (_planned_) | Publish posts | Postgres | App-level envelope encryption (below), on top of at-rest encryption |
+| GitHub App credentials, webhook secrets (_planned, Phase 2_) | Receive pushes | Host secret manager | Never in the database or code |
 | Commit messages, PR text, app store listings (_planned_) | Source for posts | Postgres | Treated as untrusted input; sent to the AI only as quoted data |
 | Generated images and videos (_planned_) | Posts | Private S3-compatible bucket | Encrypted at rest; shared only by short-lived signed URLs |
-| Audit log (_planned_) | Record sign-ins, connections, publishes, staff actions | Postgres | Append-only from the app |
 
 We collect only what the product needs. A user can disconnect any account (we revoke the token where the platform allows and delete our copy) and delete their whole workspace.
 
@@ -34,9 +36,18 @@ We collect only what the product needs. A user can disconnect any account (we re
   - any change to a stored value makes decryption fail.
 - **Master keys** live only in the host's secret manager (`ENCRYPTION_MASTER_KEYS`) and in each developer's git-ignored `.env`. They are never stored in the database, logs or git.
 
+## Permissions we request, and why
+
+- **GitHub sign-in (OAuth App): no scopes.** Sign-in needs only the public profile, which GitHub returns without any scope. We do not ask for email or repository access at sign-in.
+
+## Environments
+
+- **Staging (Render, `render.yaml`):** HTTPS-only on Render with HTTP redirected; managed Postgres with no public access. _To confirm in the Render dashboard when staging is created:_ HTTPS-only and encryption at rest for the database.
+
 ## Who can access it
 
-- **The app** reads data scoped to the signed-in user's workspace. Every query that reads user data is scoped this way, with tests proving one user cannot read another's data (from Phase 1).
+- **The app** reads data scoped to the signed-in user's workspace. Every query that reads user data is scoped this way, with tests proving one user cannot read another's workspace by ID or by URL.
+- **Sign-in** is limited to an allowlist of numeric GitHub user IDs while Jaded is in testing. Denied attempts are audit-logged. Sign-in routes are rate-limited (30 requests per minute per address, in memory per instance).
 - **The owner** has access to hosting, the database and the secret manager. Access to those accounts requires two-factor sign-in.
 - **Staff** (premium tier, later) will need a staff role and two-factor sign-in, and every staff view or change of user data is audit-logged. Staff never keep account passwords after handover.
 - **Third parties:** the platforms a user connects receive only the posts the user approves. The AI provider receives post source material as quoted data; it has no tools and cannot post.

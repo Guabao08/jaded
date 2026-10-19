@@ -9,7 +9,7 @@ test("home page loads under the strict CSP with security headers", async ({ page
 
   const response = await page.goto("/");
   expect(response?.status()).toBe(200);
-  await expect(page.getByRole("heading", { name: "Jaded" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
   const headers = response!.headers();
   expect(headers["content-security-policy"]).toMatch(/script-src 'self' 'nonce-[^']+' 'strict-dynamic'/);

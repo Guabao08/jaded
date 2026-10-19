@@ -9,6 +9,10 @@ const valid = {
   DATABASE_URL: "postgresql://user:pass@localhost:5432/jaded",
   ENCRYPTION_MASTER_KEYS: `v1:${key}`,
   ENCRYPTION_ACTIVE_KEY_VERSION: "v1",
+  AUTH_SECRET: "a".repeat(32),
+  AUTH_GITHUB_ID: "client-id",
+  AUTH_GITHUB_SECRET: "client-secret",
+  AUTH_ALLOWED_GITHUB_IDS: "1001, 1002",
 };
 
 function problems(source: Record<string, string | undefined>): string[] {
@@ -26,20 +30,28 @@ describe("parseEnv", () => {
     const env = parseEnv(valid);
     expect(env.APP_URL).toBe("https://jaded.example");
     expect(env.LOG_LEVEL).toBe("info");
+    expect(env.AUTH_ALLOWED_GITHUB_IDS).toEqual(["1001", "1002"]);
   });
 
-  it.each(["APP_URL", "DATABASE_URL", "ENCRYPTION_MASTER_KEYS", "ENCRYPTION_ACTIVE_KEY_VERSION"])(
-    "refuses when %s is missing or empty",
-    (name) => {
-      expect(problems({ ...valid, [name]: undefined }).join("\n")).toContain(`${name} is required`);
-      expect(problems({ ...valid, [name]: "" }).join("\n")).toContain(`${name} is required`);
-    },
-  );
+  it.each([
+    "APP_URL",
+    "DATABASE_URL",
+    "ENCRYPTION_MASTER_KEYS",
+    "ENCRYPTION_ACTIVE_KEY_VERSION",
+    "AUTH_SECRET",
+    "AUTH_GITHUB_ID",
+    "AUTH_GITHUB_SECRET",
+    "AUTH_ALLOWED_GITHUB_IDS",
+  ])("refuses when %s is missing or empty", (name) => {
+    expect(problems({ ...valid, [name]: undefined }).join("\n")).toContain(`${name} is required`);
+    expect(problems({ ...valid, [name]: "" }).join("\n")).toContain(`${name} is required`);
+  });
 
   it("requires https in production", () => {
     expect(problems({ ...valid, APP_URL: "http://jaded.example" }).join("\n")).toContain("https");
     expect(problems({ ...valid, NODE_ENV: "development", APP_URL: "http://jaded.example" })).toEqual([]);
-    expect(problems({ ...valid, APP_URL: "http://127.0.0.1:3100" })).toEqual([]);
+    expect(problems({ ...valid, APP_URL: "http://localhost:3100" })).toEqual([]);
+    expect(problems({ ...valid, APP_URL: "http://127.0.0.1:3100" }).join("\n")).toContain("localhost");
     expect(problems({ ...valid, APP_URL: "http://localhost.evil.example" }).join("\n")).toContain("https");
   });
 

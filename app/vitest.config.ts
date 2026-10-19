@@ -6,7 +6,12 @@ export default defineConfig({
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   },
   test: {
-    include: ["tests/unit/**/*.test.ts"],
+    include: ["tests/**/*.test.ts"],
     environment: "node",
+    globalSetup: ["tests/setup/global-db.ts"],
+    setupFiles: ["tests/setup/env.ts"],
+    // Database tests share one Postgres and reset tables, so run files one at a time.
+    fileParallelism: false,
+    hookTimeout: 60_000,
   },
 });
