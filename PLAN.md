@@ -132,7 +132,7 @@ Status: [x] done
 ---
 
 ## Phase 1 — Accounts and workspaces
-Status: [ ] not started
+Status: [ ] built and tested locally; staging deploy waits on the owner (see notes)
 
 **Goal:** people can sign in and have a private workspace.
 
@@ -150,6 +150,15 @@ Status: [ ] not started
 - Staging is HTTPS-only, and its database is encrypted at rest (screenshot or a note on the host setting).
 
 **Done when** the owner can sign in on staging, and someone not on the allowlist cannot.
+
+**Notes (Phase 1)**
+- Built: Auth.js v5 (beta.32; v5 has no stable release yet) with GitHub sign-in and database sessions; models `User`, `Account`, `Session`, `Workspace`, `Membership`, `AuditLog` (first migration `init`); allowlist by numeric GitHub user ID (`AUTH_ALLOWED_GITHUB_IDS`); dashboard shell at `/w/[workspaceId]` in the DESIGN.md look (green rail, paper sheet, terracotta buttons, Frank Ruhl Libre / DM Sans / DM Mono, drawer at 620px); `render.yaml` Blueprint for staging.
+- Security beyond the checklist: a custom Auth.js adapter stores only a SHA-256 hash of session tokens, discards GitHub OAuth tokens, never links accounts by email, and creates the user's workspace in the same transaction. GitHub sign-in asks for no scopes. `AUTH_URL` is pinned to `APP_URL` so the Host header cannot change auth URLs. Sign-in routes are rate-limited (in memory, per instance).
+- Session rotation: Auth.js reuses an existing session when a signed-in user signs in again, so the auth route revokes any session presented at the OAuth callback (audit-logged) and Auth.js issues a new one.
+- Tests: 64 Vitest tests (unit plus database tests on a throwaway real Postgres from `embedded-postgres`) and 8 Playwright tests that sign in through a fake GitHub (`e2e/mock-github.mjs`, allowed only for loopback URLs): cookie flags and 7-day expiry, hashed token in the database, rotation on a second sign-in, user A gets 404 on user B's workspace URL, a non-allowlisted user is refused and audit-logged, sign-out deletes the session.
+- Local Postgres: `npm run db:local` (embedded-postgres; no Docker or system install needed). Tests and CI start their own.
+- Found while testing: Next.js 16's `NextRequest` rewrites a `127.0.0.1` host to `localhost`, which breaks Auth.js redirects, so the app refuses a loopback-IP `APP_URL`; use `localhost`.
+- Waiting on the owner (accounts I can't create): (1) a GitHub OAuth App for local dev and one for staging; (2) a Render account and applying `render.yaml`, entering the `sync: false` secrets in Render; (3) confirming HTTPS-only and database encryption at rest in Render and noting it in SECURITY.md; (4) signing in on staging and checking a non-allowlisted account is refused. Then mark this phase done.
 
 ---
 

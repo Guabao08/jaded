@@ -40,11 +40,15 @@ jobs:
         working-directory: app
     env:
       NEXT_TELEMETRY_DISABLED: "1"
-      # Throwaway values so the app's startup validation passes in CI. No
-      # database is needed in Phase 0; the master key is generated per run.
-      APP_URL: http://127.0.0.1:3100
+      # Throwaway values so the app's startup validation passes for the build.
+      # Tests start their own throwaway Postgres (scripts/pg.mjs); secrets are
+      # generated per run below.
+      APP_URL: http://localhost:3100
       DATABASE_URL: postgresql://jaded:jaded@127.0.0.1:5432/jaded_ci
       ENCRYPTION_ACTIVE_KEY_VERSION: ci
+      AUTH_GITHUB_ID: ci-client-id
+      AUTH_GITHUB_SECRET: ci-client-secret
+      AUTH_ALLOWED_GITHUB_IDS: "1001"
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -52,8 +56,10 @@ jobs:
           node-version: 20
           cache: npm
           cache-dependency-path: app/package-lock.json
-      - name: Generate a throwaway master key
-        run: echo "ENCRYPTION_MASTER_KEYS=ci:$(openssl rand -base64 32)" >> "$GITHUB_ENV"
+      - name: Generate throwaway keys
+        run: |
+          echo "ENCRYPTION_MASTER_KEYS=ci:$(openssl rand -base64 32)" >> "$GITHUB_ENV"
+          echo "AUTH_SECRET=$(openssl rand -base64 32)" >> "$GITHUB_ENV"
       - run: npm ci
       - run: npx prisma generate
       - run: npm run typecheck

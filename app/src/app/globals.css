@@ -1,33 +1,149 @@
+/* Tokens from DESIGN.md. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --forest-binding: #153b39;
+  --forest-stage: #173e3a;
+  --terracotta: #c94f39;
+  --terracotta-button: #d66b52;
+  --paper-ground: #e9e5dc;
+  --paper-sheet: #f4f0e7;
+  --paper-raised: #faf7ef;
+  --ink-primary: #1b2826;
+  --ink-secondary: #4e605b;
+  --ink-on-forest: #eef2ea;
+  --ink-on-forest-muted: #b8c9c1;
+  --border-soft: #d4cdbf;
+  --acetate-green: #d7e7df;
+  --acetate-sand: #eee2cb;
+  --shadow-sheet: 0 8px 19px #26382d15;
+  --display: var(--font-display), Georgia, serif;
+  --sans: var(--font-body), system-ui, sans-serif;
+  --mono: var(--font-mono), ui-monospace, monospace;
 }
 
 * {
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
-  color: var(--foreground);
-  background: var(--background);
-  font-family:
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    Roboto,
-    sans-serif;
+  min-height: 100%;
 }
 
-main {
-  max-width: 40rem;
-  margin: 0 auto;
-  padding: 4rem 1rem;
+body {
+  background: var(--paper-ground);
+  color: var(--ink-primary);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2 {
+  font-family: var(--display);
+  line-height: 1.1;
+  margin: 0 0 0.5em;
+}
+
+h1 {
+  font-size: clamp(2.4rem, 4.1vw, 3.3rem);
+  font-weight: 400;
+}
+
+h2 {
+  font-size: clamp(1.6rem, 2.6vw, 2.2rem);
+  font-weight: 500;
+}
+
+p {
+  margin: 0 0 1em;
+  max-width: 62ch;
+}
+
+a {
+  color: var(--terracotta);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 2px solid var(--forest-binding);
+  outline-offset: 2px;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+
+.mono {
+  font-family: var(--mono);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 3px;
+  background: var(--terracotta-button);
+  color: #251d19;
+  font: 600 14px var(--sans);
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+.button-ghost {
+  background: transparent;
+  color: inherit;
+  border: 1px solid currentColor;
+}
+
+.sheet {
+  background: var(--paper-sheet);
+  border-radius: 2px;
+  box-shadow: var(--shadow-sheet);
+  padding: 26px 32px;
+}
+
+.notice {
+  background: var(--acetate-sand);
+  border-left: 3px solid var(--terracotta);
+  padding: 10px 14px;
+  margin: 0 0 16px;
+}
+
+/* Public pages: a single sheet on the paper ground. */
+.public {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+}
+
+.public .sheet {
+  width: 100%;
+  max-width: 34rem;
+}
+
+@media (max-width: 620px) {
+  .sheet {
+    padding: 20px;
+  }
 }

@@ -1,0 +1,54 @@
+# Render Blueprint for the Jaded staging environment.
+# In Render: New > Blueprint > pick this repo. Secrets marked `sync: false`
+# are entered in Render's dashboard (its secret store), never in this file.
+# Render serves the app over HTTPS only and redirects HTTP to HTTPS; managed
+# Postgres is encrypted at rest. Confirm both in the dashboard (see SECURITY.md).
+
+databases:
+  - name: jaded-staging-db
+    databaseName: jaded
+    plan: basic-256mb
+    postgresMajorVersion: "17"
+    # No public access: only services in this Render account can connect.
+    ipAllowList: []
+
+services:
+  - type: web
+    name: jaded-staging
+    runtime: node
+    rootDir: app
+    plan: starter
+    branch: main
+    # Deploy only after CI passes on main.
+    autoDeployTrigger: checksPass
+    buildCommand: npm ci && npm run build
+    preDeployCommand: npx prisma migrate deploy
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      # The service's https://…onrender.com URL (or a custom domain).
+      - key: APP_URL
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: jaded-staging-db
+          property: connectionString
+      # v1:<output of `npm run keygen`>
+      - key: ENCRYPTION_MASTER_KEYS
+        sync: false
+      - key: ENCRYPTION_ACTIVE_KEY_VERSION
+        value: v1
+      - key: AUTH_SECRET
+        generateValue: true
+      # GitHub OAuth App for staging; callback <APP_URL>/api/auth/callback/github
+      - key: AUTH_GITHUB_ID
+        sync: false
+      - key: AUTH_GITHUB_SECRET
+        sync: false
+      # The owner's numeric GitHub user ID.
+      - key: AUTH_ALLOWED_GITHUB_IDS
+        sync: false

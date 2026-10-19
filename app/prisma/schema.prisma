@@ -1,5 +1,3 @@
-// Models arrive with Phase 1 (accounts and workspaces).
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -7,4 +5,95 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// A person who signs in with GitHub. We keep only their public GitHub
+// identity; no email is requested in Phase 1.
+model User {
+  id          String       @id @default(cuid())
+  githubId    String       @unique
+  githubLogin String
+  name        String?
+  image       String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  accounts    Account[]
+  sessions    Session[]
+  memberships Membership[]
+  auditLogs   AuditLog[]   @relation("AuditActor")
+}
+
+// Links a User to their GitHub OAuth identity. OAuth tokens are deliberately
+// not stored: sign-in only needs the identity, and repo access comes from the
+// GitHub App (Phase 2).
+model Account {
+  id                String   @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  createdAt         DateTime @default(now())
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+// Database session. Only a SHA-256 hash of the session token is stored, so a
+// database leak does not leak usable sessions.
+model Session {
+  id               String   @id @default(cuid())
+  sessionTokenHash String   @unique
+  userId           String
+  expires          DateTime
+  createdAt        DateTime @default(now())
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Workspace {
+  id          String       @id @default(cuid())
+  name        String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  memberships Membership[]
+  auditLogs   AuditLog[]
+}
+
+enum MembershipRole {
+  OWNER
+  MEMBER
+}
+
+model Membership {
+  id          String         @id @default(cuid())
+  userId      String
+  workspaceId String
+  role        MembershipRole @default(MEMBER)
+  createdAt   DateTime       @default(now())
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+  @@index([workspaceId])
+}
+
+// Append-only record of security-relevant events. Never store tokens or
+// request bodies in metadata.
+model AuditLog {
+  id          String     @id @default(cuid())
+  action      String
+  actorUserId String?
+  workspaceId String?
+  metadata    Json?
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime   @default(now())
+  actor       User?      @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([action, createdAt])
 }
