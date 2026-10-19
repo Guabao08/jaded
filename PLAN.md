@@ -102,7 +102,7 @@ Each phase below lists the security items it must prove.
 ---
 
 ## Phase 0 — Foundation and security baseline
-Status: [ ] built, one check left (fake-secret CI canary, see notes)
+Status: [x] done
 
 **Goal:** an empty but production-shaped app that is safe to build on.
 
@@ -124,9 +124,9 @@ Status: [ ] built, one check left (fake-secret CI canary, see notes)
 **Notes (Phase 0)**
 - Built `app/`: Next.js 16 (App Router, TypeScript), Prisma 7 with the `pg` driver adapter (no models yet), pg-boss 12, zod env validation run from `next.config.ts` (dev, build and start all exit with the missing variable names), `lib/crypto` (AES-256-GCM envelope encryption with per-value data keys, versioned master keys, context binding, rotation by re-wrapping), `lib/log` (JSON logger with mandatory redaction), and security headers plus a per-request nonce CSP in `src/proxy.ts` (Next.js 16 renamed middleware to "proxy").
 - Tests: 43 Vitest unit tests (crypto incl. tampering of every part, redaction, env, proxy) and 2 Playwright tests (page loads with no CSP violations, headers present).
-- CI: `.github/workflows/ci.yml` (type-check, lint, Prettier, tests, `npm audit --audit-level=high`, build, Playwright, start-refusal check, gitleaks over full history) and `codeql.yml`. Dependabot for npm and Actions. Pre-commit hook in `.githooks/` (enabled by `npm install`) runs gitleaks; it blocks the commit if gitleaks is not installed, unless `GITLEAKS_SKIP=1`.
+- CI: `.github/workflows/ci.yml` (type-check, lint, Prettier, tests, `npm audit --audit-level=high`, build, Playwright, start-refusal check, gitleaks over full history) and `codeql.yml`. Dependabot for npm and Actions. Pre-commit hook in `.githooks/` (enabled by `npm install`) runs gitleaks; it blocks the commit if gitleaks is not installed, unless `GITLEAKS_SKIP=1`. gitleaks 8.30.1 is installed on the owner's machine in `~/bin`.
 - Choices: `cacheComponents`/partial prefetching are off because Next.js documents them as incompatible with nonce CSPs. `eslint-config-next` is replaced by `typescript-eslint` + `eslint-plugin-react-hooks` because its glob dependency has an unfixed high advisory that fails `npm audit`. HTTP is allowed in production builds only for loopback `APP_URL`s (local `next start`, e2e).
-- Verified: CI is green on GitHub (CI and CodeQL workflows), and every CI step also passed on a fresh local clone. Not yet shown: that a committed fake secret fails CI. The gitleaks job scans the full history and fails on any finding (`--exit-code 1`), but pushing a canary branch with a fake token was not done. To finish: push a branch with a commit containing a made-up `ghp_` + 36 random letters/digits token, confirm the "Secret scan" job fails, then delete the branch. Then mark this phase done.
+- Verified: CI is green on GitHub (CI and CodeQL workflows), and every CI step also passed on a fresh local clone. Fake-secret check: in a throwaway clone, a commit containing a random fake `ghp_` token was blocked by the pre-commit hook, and CI's exact gitleaks command (`gitleaks git --redact --exit-code 1 .`, v8.30.1) exited 1 with "leaks found: 1". This was run locally with the same binary version as CI, not as a pushed branch on GitHub Actions.
 - Deferred: no database is needed yet, so nothing connects to Postgres in Phase 0 (no local Postgres or Docker on the owner's machine; `npx prisma dev` is an option for Phase 1). At-rest encryption, the secret manager and HTTPS are confirmed when hosting is set up. GitHub private vulnerability reporting must be turned on in repo settings for `SECURITY.md`'s reporting link.
 
 ---
