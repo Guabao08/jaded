@@ -1,0 +1,9 @@
+# Gitleaks config: the default rules, plus one narrow allowlist.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fake token shapes used to test log redaction"
+paths = [
+  '''^app/tests/unit/log\.test\.ts$''',
+]

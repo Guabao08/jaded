@@ -1,0 +1,10 @@
+// Models arrive with Phase 1 (accounts and workspaces).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}

@@ -1,0 +1,12 @@
+#!/bin/sh
+# Blocks commits that contain secrets. Enabled by `npm install` in app/
+# (it sets core.hooksPath to .githooks). Requires gitleaks:
+#   https://github.com/gitleaks/gitleaks#installing
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "pre-commit: gitleaks is not installed, so staged changes cannot be scanned for secrets." >&2
+  echo "Install it (https://github.com/gitleaks/gitleaks#installing), then commit again." >&2
+  echo "CI still scans every push; to commit without the local scan, set GITLEAKS_SKIP=1." >&2
+  [ "$GITLEAKS_SKIP" = "1" ] && exit 0
+  exit 1
+fi
+exec gitleaks git --pre-commit --staged --redact --verbose
