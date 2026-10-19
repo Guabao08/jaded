@@ -111,7 +111,8 @@ test("user A cannot load user B's workspace by URL", async ({ browser }) => {
 test("someone not on the allowlist cannot sign in", async ({ page, context }) => {
   await signInAs(page, mallory);
   await expect(page).toHaveURL(/\/signin\?error=AccessDenied/);
-  await expect(page.getByRole("alert")).toContainText("not on the testing allowlist");
+  // Next.js also renders a route announcer with role="alert", so match the notice itself.
+  await expect(page.locator("p.notice[role=alert]")).toContainText("not on the testing allowlist");
   expect(await sessionCookie(context)).toBeUndefined();
 
   const users = await sql.query('SELECT 1 FROM "User" WHERE "githubId" = $1', [String(mallory.id)]);
