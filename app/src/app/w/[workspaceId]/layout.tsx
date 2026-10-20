@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth/session";
 import { getWorkspaceForUser } from "@/lib/workspaces";
 import { signOutAction } from "../../actions";
+import { NavLink } from "./nav-link";
 import styles from "./shell.module.css";
 
 export default async function WorkspaceLayout({ children, params }: LayoutProps<"/w/[workspaceId]">) {
@@ -18,9 +18,14 @@ export default async function WorkspaceLayout({ children, params }: LayoutProps<
       <nav aria-label="Workspace">
         <ul className={styles.nav}>
           <li>
-            <Link className={styles.active} href={`/w/${workspace.id}`} aria-current="page">
+            <NavLink href={`/w/${workspace.id}`} exact activeClassName={styles.active}>
               Overview
-            </Link>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink href={`/w/${workspace.id}/updates`} activeClassName={styles.active}>
+              Updates
+            </NavLink>
           </li>
         </ul>
       </nav>

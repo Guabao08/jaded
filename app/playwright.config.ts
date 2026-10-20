@@ -5,7 +5,8 @@ const PORT = 3100;
 const MOCK_GITHUB_PORT = 3101;
 
 // End-to-end tests run against a production build (`npm run build` first),
-// through `npm run test:e2e`, which provides a throwaway DATABASE_URL.
+// through `npm run test:e2e`, which provides a throwaway DATABASE_URL and
+// throwaway GitHub App credentials (E2E_*).
 // Sign-in goes to a fake GitHub (e2e/mock-github.mjs). Every value here is a
 // throwaway generated per run, not a secret.
 export default defineConfig({
@@ -23,7 +24,11 @@ export default defineConfig({
     {
       command: "node e2e/mock-github.mjs",
       url: `http://127.0.0.1:${MOCK_GITHUB_PORT}/health`,
-      env: { MOCK_GITHUB_PORT: String(MOCK_GITHUB_PORT) },
+      env: {
+        MOCK_GITHUB_PORT: String(MOCK_GITHUB_PORT),
+        MOCK_APP_PUBLIC_KEY: process.env.E2E_APP_PUBLIC_KEY ?? "",
+        MOCK_APP_CALLBACK: `http://localhost:${PORT}/api/github/callback`,
+      },
       reuseExistingServer: false,
     },
     {
@@ -39,8 +44,14 @@ export default defineConfig({
         AUTH_SECRET: randomBytes(32).toString("base64"),
         AUTH_GITHUB_ID: "e2e-client-id",
         AUTH_GITHUB_SECRET: "e2e-client-secret",
-        AUTH_GITHUB_BASE_URL: `http://127.0.0.1:${MOCK_GITHUB_PORT}`,
+        GITHUB_TEST_BASE_URL: `http://127.0.0.1:${MOCK_GITHUB_PORT}`,
         AUTH_ALLOWED_GITHUB_IDS: "1001,1002",
+        GITHUB_APP_ID: "123",
+        GITHUB_APP_SLUG: "jaded-test",
+        GITHUB_APP_PRIVATE_KEY: process.env.E2E_APP_PRIVATE_KEY ?? "",
+        GITHUB_APP_CLIENT_ID: "e2e-app-client-id",
+        GITHUB_APP_CLIENT_SECRET: "e2e-app-client-secret",
+        GITHUB_WEBHOOK_SECRET: process.env.E2E_WEBHOOK_SECRET ?? "",
       },
     },
   ],

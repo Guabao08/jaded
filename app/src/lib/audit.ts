@@ -3,7 +3,13 @@ import type { Prisma } from "@/generated/prisma/client";
 import { db } from "./db";
 import { log, redact } from "./log";
 
-export type AuditAction = "auth.sign_in" | "auth.sign_in_denied" | "auth.sign_out" | "auth.session_revoked_on_login";
+export type AuditAction =
+  | "auth.sign_in"
+  | "auth.sign_in_denied"
+  | "auth.sign_out"
+  | "auth.session_revoked_on_login"
+  | "github.installation_connected"
+  | "github.installation_rejected";
 
 export interface AuditEntry {
   action: AuditAction;

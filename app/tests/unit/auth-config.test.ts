@@ -55,12 +55,12 @@ describe("sign-in allowlist", () => {
 
   it("allows the fake-GitHub override only for local testing", () => {
     expect(() =>
-      parseEnv({ ...process.env, APP_URL: "https://jaded.example", AUTH_GITHUB_BASE_URL: "http://127.0.0.1:3101" }),
-    ).toThrow(/AUTH_GITHUB_BASE_URL/);
-    expect(() => parseEnv({ ...process.env, AUTH_GITHUB_BASE_URL: "https://evil.example" })).toThrow(
-      /AUTH_GITHUB_BASE_URL/,
+      parseEnv({ ...process.env, APP_URL: "https://jaded.example", GITHUB_TEST_BASE_URL: "http://127.0.0.1:3101" }),
+    ).toThrow(/GITHUB_TEST_BASE_URL/);
+    expect(() => parseEnv({ ...process.env, GITHUB_TEST_BASE_URL: "https://evil.example" })).toThrow(
+      /GITHUB_TEST_BASE_URL/,
     );
-    expect(parseEnv({ ...process.env, AUTH_GITHUB_BASE_URL: "http://127.0.0.1:3101" }).AUTH_GITHUB_BASE_URL).toBe(
+    expect(parseEnv({ ...process.env, GITHUB_TEST_BASE_URL: "http://127.0.0.1:3101" }).GITHUB_TEST_BASE_URL).toBe(
       "http://127.0.0.1:3101",
     );
   });

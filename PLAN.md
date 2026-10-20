@@ -132,7 +132,7 @@ Status: [x] done
 ---
 
 ## Phase 1 — Accounts and workspaces
-Status: [ ] built and tested locally; staging deploy waits on the owner (see notes)
+Status: [x] done for local use; staging deploy deferred until a host is chosen
 
 **Goal:** people can sign in and have a private workspace.
 
@@ -158,12 +158,13 @@ Status: [ ] built and tested locally; staging deploy waits on the owner (see not
 - Tests: 64 Vitest tests (unit plus database tests on a throwaway real Postgres from `embedded-postgres`) and 8 Playwright tests that sign in through a fake GitHub (`e2e/mock-github.mjs`, allowed only for loopback URLs): cookie flags and 7-day expiry, hashed token in the database, rotation on a second sign-in, user A gets 404 on user B's workspace URL, a non-allowlisted user is refused and audit-logged, sign-out deletes the session.
 - Local Postgres: `npm run db:local` (embedded-postgres; no Docker or system install needed). Tests and CI start their own.
 - Found while testing: Next.js 16's `NextRequest` rewrites a `127.0.0.1` host to `localhost`, which breaks Auth.js redirects, so the app refuses a loopback-IP `APP_URL`; use `localhost`.
-- Waiting on the owner (accounts I can't create): (1) a GitHub OAuth App for local dev and one for staging; (2) a Render account and applying `render.yaml`, entering the `sync: false` secrets in Render; (3) confirming HTTPS-only and database encryption at rest in Render and noting it in SECURITY.md; (4) signing in on staging and checking a non-allowlisted account is refused. Then mark this phase done.
+- Owner decision (2026-10-19): the host is not chosen yet, so Phase 1 is marked done for local use and the staging items move to whenever hosting is set up. Sign-in works locally with the owner's GitHub OAuth App; the allowlist holds the owner (macnewbi3, 343130711) and partner (Guabao08, 205361671). The repo moved to github.com/jaded-app/jaded. `render.yaml` stays as the Render option.
+- Still to do once a host is chosen: (1) a GitHub OAuth App for local dev and one for staging; (2) a Render account and applying `render.yaml`, entering the `sync: false` secrets in Render; (3) confirming HTTPS-only and database encryption at rest in Render and noting it in SECURITY.md; (4) signing in on staging and checking a non-allowlisted account is refused. Then mark this phase done.
 
 ---
 
 ## Phase 2 — Connect the app (GitHub and app stores)
-Status: [ ] not started
+Status: [ ] built and tested locally; live check waits on the GitHub App and a public URL (see notes)
 
 **Goal:** a workspace knows about the developer's app and receives their pushes.
 
@@ -181,6 +182,12 @@ Status: [ ] not started
 - Imported app store text is marked untrusted in the data model.
 
 **Done when** a push to a connected test repo shows up as an Update in the dashboard within a minute.
+
+**Notes (Phase 2)**
+- Built: models `GitHubInstallation`, `Repository`, `App`, `StoreListing`, `BrandProfile` (with brand voice: tone, audience, words to avoid), `WebhookDelivery`, `Update`, and a `ContentOrigin` enum that marks commit text and imported listings `EXTERNAL_UNTRUSTED` (migration `connect_app`). Includes the GitHub App client (RS256 app JWT, installation tokens minted per task with read-only permissions and never stored), the install flow (state cookie, plus the installation's user-authorization code so we only link installations GitHub confirms the user can access; that user token is revoked straight away), and the webhook endpoint ported from ShipBrief (1 MB cap, constant-time HMAC check before parsing, delivery-ID replay check, quick 202, work queued to pg-boss). A background worker turns default-branch pushes into Updates with linked PRs and keeps repository lists in sync on install/uninstall events. Also built: App Store / Google Play import (fixed store endpoints only, no redirects, size and time limits, store image hosts allowed in the CSP), and dashboard pages for apps, brand profile and voice, and Updates. Commit author emails are dropped on intake.
+- Tests: 108 Vitest tests (including bad signature → 401, replay → ignored, oversized → 413, forged install callback, retry idempotency, uninstall cleanup, cross-workspace isolation for apps and repos) and 12 Playwright tests. Against a fake GitHub that checks the app JWT, they connect GitHub, send a signed push, and see it as an Update within a minute.
+- Not done yet: (1) creating the real GitHub App (owner, steps in app/README.md) and a live push, which needs a public HTTPS webhook URL, so it waits on hosting (or a temporary tunnel); (2) deleting the old ShipBrief code (`server.js`, `public/`, root `package.json`). Nothing depends on it, but the delete is waiting for the owner's OK.
+- No shared workspaces or invites (not decided). Each GitHub installation belongs to one workspace.
 
 ---
 
