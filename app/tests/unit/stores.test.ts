@@ -93,16 +93,19 @@ describe("parseAppStoreLookup", () => {
 });
 
 describe("parsePlayListing", () => {
-  const html = `<!doctype html><html><head>
+  // Built from parts so the JSON-LD block can be left out without editing HTML.
+  const playPage = (jsonLd: string) => `<!doctype html><html><head>
     <meta property="og:title" content="Demo App - Apps on Google Play">
     <meta property="og:image" content="https://play-lh.googleusercontent.com/icon=s512">
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Demo App","description":"Plan your week &amp; more.","applicationCategory":"PRODUCTIVITY","image":"https://play-lh.googleusercontent.com/icon"}</script>
+    ${jsonLd}
     </head><body>
     <img src="https://play-lh.googleusercontent.com/shot1=w526" alt="Screenshot image" class="x">
     <img alt="Screenshot image" src="https://play-lh.googleusercontent.com/shot2=w526">
     <img src="https://evil.example/tracker.png" alt="Screenshot image">
     <img src="https://play-lh.googleusercontent.com/avatar" alt="Developer avatar">
     </body></html>`;
+  const jsonLd = `<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Demo App","description":"Plan your week &amp; more.","applicationCategory":"PRODUCTIVITY","image":"https://play-lh.googleusercontent.com/icon"}</script>`;
+  const html = playPage(jsonLd);
 
   it("reads JSON-LD and screenshot images", () => {
     expect(parsePlayListing(html)).toEqual({
@@ -118,7 +121,7 @@ describe("parsePlayListing", () => {
   });
 
   it("falls back to Open Graph tags", () => {
-    const listing = parsePlayListing(html.replace(/<script[\s\S]*?<\/script>/, ""));
+    const listing = parsePlayListing(playPage(""));
     expect(listing.name).toBe("Demo App");
     expect(listing.iconUrl).toBe("https://play-lh.googleusercontent.com/icon=s512");
   });
