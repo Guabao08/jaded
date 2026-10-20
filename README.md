@@ -15,7 +15,5 @@ Requires Node.js 20.12 or later.
 cd app
 npm install
 cp .env.example .env        # then fill it in (see app/README.md)
-npm run db:local            # in its own terminal: local Postgres
-npm run db:migrate
-npm run dev                 # http://localhost:3000
+npm run dev:local           # starts the local database, applies migrations, runs the app at http://localhost:3000
 ```
