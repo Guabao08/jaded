@@ -11,10 +11,10 @@ cd app
 npm install                 # also generates the Prisma client and enables the gitleaks pre-commit hook
 cp .env.example .env
 npm run keygen              # run twice: one for ENCRYPTION_MASTER_KEYS (as v1:<key>), one for AUTH_SECRET
-npm run db:local            # in its own terminal: a local Postgres on port 5433 (data in app/.data/pg)
-npm run db:migrate          # apply migrations
-npm run dev                 # http://localhost:3000
+npm run dev:local           # local Postgres on port 5433 (data in app/.data/pg) + migrations + next dev at http://localhost:3000
 ```
+
+`npm run dev:local` is the one-command version; Ctrl+C stops the app and the database. To run them separately: `npm run db:local` in one terminal, then `npm run db:migrate` and `npm run dev` in another.
 
 Use `localhost`, not `127.0.0.1`, in `APP_URL`; the app refuses a loopback IP because Next.js rewrites it to `localhost`, which breaks sign-in redirects.
 

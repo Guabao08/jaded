@@ -18,6 +18,7 @@
     "db:migrate": "prisma migrate dev",
     "keygen": "node scripts/keygen.mjs",
     "db:local": "node scripts/local-db.mjs",
+    "dev:local": "node scripts/dev-local.mjs",
     "postinstall": "prisma generate",
     "prepare": "git -C .. config core.hooksPath .githooks || true"
   },
