@@ -34,8 +34,20 @@ export const envSchema = z
       .string()
       .regex(/^\s*\d+(\s*,\s*\d+)*\s*$/, "must be comma-separated numeric GitHub user IDs")
       .transform((value) => value.split(",").map((id) => id.trim())),
-    // Test-only: points sign-in at a fake GitHub. Allowed only when APP_URL is loopback.
-    AUTH_GITHUB_BASE_URL: z.url({ protocol: /^https?$/ }).optional(),
+    // Test-only: points sign-in and the GitHub API at a fake GitHub. Allowed only when APP_URL is loopback.
+    GITHUB_TEST_BASE_URL: z.url({ protocol: /^https?$/ }).optional(),
+    // GitHub App (repository access and push webhooks). Optional as a group:
+    // until it is created, the app runs and shows "GitHub not configured".
+    GITHUB_APP_ID: z.string().regex(/^\d+$/, "must be the numeric App ID").optional(),
+    GITHUB_APP_SLUG: z
+      .string()
+      .regex(/^[a-z0-9-]+$/, "must be the app's URL name")
+      .optional(),
+    // PEM private key, either as-is (literal "\n" escapes allowed) or base64-encoded.
+    GITHUB_APP_PRIVATE_KEY: z.string().min(1).optional(),
+    GITHUB_APP_CLIENT_ID: z.string().min(1).optional(),
+    GITHUB_APP_CLIENT_SECRET: z.string().min(1).optional(),
+    GITHUB_WEBHOOK_SECRET: z.string().min(32, "must be at least 32 characters").optional(),
   })
   .superRefine((env, ctx) => {
     if (!httpsInProduction(env.APP_URL, env.NODE_ENV)) {
@@ -45,12 +57,26 @@ export const envSchema = z
       // Next.js rewrites loopback IPs to "localhost" in requests, which breaks sign-in redirects.
       ctx.addIssue({ code: "custom", path: ["APP_URL"], message: "must use localhost instead of a loopback IP" });
     }
-    if (env.AUTH_GITHUB_BASE_URL && !(isLoopbackUrl(env.APP_URL) && isLoopbackUrl(env.AUTH_GITHUB_BASE_URL))) {
+    if (env.GITHUB_TEST_BASE_URL && !(isLoopbackUrl(env.APP_URL) && isLoopbackUrl(env.GITHUB_TEST_BASE_URL))) {
       ctx.addIssue({
         code: "custom",
-        path: ["AUTH_GITHUB_BASE_URL"],
+        path: ["GITHUB_TEST_BASE_URL"],
         message: "is only allowed for local testing (loopback APP_URL and base URL)",
       });
+    }
+    const appVars = [
+      "GITHUB_APP_ID",
+      "GITHUB_APP_SLUG",
+      "GITHUB_APP_PRIVATE_KEY",
+      "GITHUB_APP_CLIENT_ID",
+      "GITHUB_APP_CLIENT_SECRET",
+      "GITHUB_WEBHOOK_SECRET",
+    ] as const;
+    const set = appVars.filter((name) => env[name] !== undefined);
+    if (set.length > 0 && set.length < appVars.length) {
+      for (const name of appVars.filter((n) => env[n] === undefined)) {
+        ctx.addIssue({ code: "custom", path: [name], message: "is required when any GITHUB_APP_* variable is set" });
+      }
     }
     try {
       parseKeyring(env.ENCRYPTION_MASTER_KEYS, env.ENCRYPTION_ACTIVE_KEY_VERSION);
@@ -64,6 +90,33 @@ export const envSchema = z
   });
 
 export type Env = z.infer<typeof envSchema>;
+
+export interface GitHubAppEnv {
+  appId: string;
+  slug: string;
+  privateKey: string;
+  clientId: string;
+  clientSecret: string;
+  webhookSecret: string;
+}
+
+/** The GitHub App settings, or null when the App is not configured yet. */
+export function githubAppEnv(e: Env): GitHubAppEnv | null {
+  if (!e.GITHUB_APP_ID || !e.GITHUB_APP_SLUG || !e.GITHUB_APP_PRIVATE_KEY) return null;
+  if (!e.GITHUB_APP_CLIENT_ID || !e.GITHUB_APP_CLIENT_SECRET || !e.GITHUB_WEBHOOK_SECRET) return null;
+  const raw = e.GITHUB_APP_PRIVATE_KEY.trim();
+  const privateKey = raw.startsWith("-----BEGIN")
+    ? raw.replace(/\\n/g, "\n")
+    : Buffer.from(raw, "base64").toString("utf8");
+  return {
+    appId: e.GITHUB_APP_ID,
+    slug: e.GITHUB_APP_SLUG,
+    privateKey,
+    clientId: e.GITHUB_APP_CLIENT_ID,
+    clientSecret: e.GITHUB_APP_CLIENT_SECRET,
+    webhookSecret: e.GITHUB_WEBHOOK_SECRET,
+  };
+}
 
 export class EnvError extends Error {
   constructor(readonly problems: string[]) {

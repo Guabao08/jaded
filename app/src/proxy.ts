@@ -2,8 +2,17 @@ import { NextResponse, type NextRequest } from "next/server";
 import { clientIp, createRateLimiter } from "@/lib/rate-limit";
 import { buildPageCsp, generateNonce } from "@/lib/security-headers";
 
-// Sign-in endpoints: 30 requests per minute per client address.
+// Per client address, per minute: sign-in 30, GitHub webhooks 300, other API 120.
 const authLimiter = createRateLimiter({ limit: 30, windowMs: 60_000 });
+const webhookLimiter = createRateLimiter({ limit: 300, windowMs: 60_000 });
+const apiLimiter = createRateLimiter({ limit: 120, windowMs: 60_000 });
+
+function limiterFor(pathname: string) {
+  if (pathname.startsWith("/api/auth/")) return authLimiter;
+  if (pathname === "/api/github/webhook") return webhookLimiter;
+  if (pathname.startsWith("/api/")) return apiLimiter;
+  return null;
+}
 
 /**
  * Runs before every non-static request:
@@ -11,7 +20,7 @@ const authLimiter = createRateLimiter({ limit: 30, windowMs: 60_000 });
  *    are redirected (GET/HEAD) or refused (anything else, so webhooks are
  *    never accepted over HTTP). The host terminates TLS and reports the
  *    original scheme in x-forwarded-proto;
- *  - sign-in endpoints are rate-limited per client address;
+ *  - API routes (sign-in, webhooks, the rest) are rate-limited per client address;
  *  - pages get a strict, per-request nonce CSP.
  * Static headers (HSTS etc.) come from next.config.ts.
  */
@@ -29,7 +38,8 @@ export function proxy(request: NextRequest) {
     return new NextResponse("HTTPS required", { status: 403 });
   }
 
-  if (request.nextUrl.pathname.startsWith("/api/auth/") && !authLimiter.hit(clientIp(request.headers))) {
+  const limiter = limiterFor(request.nextUrl.pathname);
+  if (limiter && !limiter.hit(clientIp(request.headers))) {
     return new NextResponse("Too many requests", { status: 429, headers: { "Retry-After": "60" } });
   }
 

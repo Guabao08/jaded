@@ -17,9 +17,12 @@ This section grows as features are built. Items marked _planned_ are not stored 
 | Sign-in sessions | Keep users signed in | Postgres (`Session`), browser cookie | Cookie `__Secure-jaded.session`: `httpOnly`, `Secure`, `SameSite=Lax`, expires after 7 days. The database stores only a SHA-256 hash of the session token. Any session presented at login is revoked and a new one issued. |
 | Workspaces and memberships | A private workspace per user | Postgres | Every read goes through the user's membership (`app/src/lib/workspaces.ts`); another user's workspace returns 404 |
 | Audit log: sign-ins, denied sign-ins, sign-outs, session revocations, with IP and user agent | Security investigation | Postgres (`AuditLog`) | Metadata passes through the log redaction helper; only the app writes it |
+| GitHub App installations and their repository list (installation ID, account login, repo ID, name, private flag, default branch) | Know which repos belong to a workspace | Postgres | No GitHub tokens are stored. Installation tokens are minted per task (read-only, scoped to the repo) and discarded. Uninstalling the App deletes our copy. |
+| Webhook delivery IDs | Reject replayed deliveries | Postgres (`WebhookDelivery`) | IDs and event names only, no payloads |
+| Updates: pushes to a connected repo's default branch (commit SHAs, messages, links, pusher login, linked PR titles) | Source for posts | Postgres (`Update`) | Marked `EXTERNAL_UNTRUSTED`. Commit author emails are dropped on intake and never stored. |
+| Apps, imported store listings, brand profiles and voice | What posts are about and how they sound | Postgres (`App`, `StoreListing`, `BrandProfile`) | Imported listing text is marked `EXTERNAL_UNTRUSTED`; a profile becomes `USER` only when the user saves it. Images stay on the stores' own hosts. |
 | OAuth tokens for Meta, Google, TikTok (_planned_) | Publish posts | Postgres | App-level envelope encryption (below), on top of at-rest encryption |
-| GitHub App credentials, webhook secrets (_planned, Phase 2_) | Receive pushes | Host secret manager | Never in the database or code |
-| Commit messages, PR text, app store listings (_planned_) | Source for posts | Postgres | Treated as untrusted input; sent to the AI only as quoted data |
+| GitHub App private key, client secret, webhook secret | Act as the App, verify webhooks | Host secret manager / local `.env` | Never in the database or code |
 | Generated images and videos (_planned_) | Posts | Private S3-compatible bucket | Encrypted at rest; shared only by short-lived signed URLs |
 
 We collect only what the product needs. A user can disconnect any account (we revoke the token where the platform allows and delete our copy) and delete their whole workspace.
@@ -39,6 +42,9 @@ We collect only what the product needs. A user can disconnect any account (we re
 ## Permissions we request, and why
 
 - **GitHub sign-in (OAuth App): no scopes.** Sign-in needs only the public profile, which GitHub returns without any scope. We do not ask for email or repository access at sign-in.
+- **GitHub App, repository permissions, all read-only:** Metadata (required by GitHub; lists the installed repos), Contents (read commits behind a push), Pull requests (find the PR a push came from). No write access and no account permissions. Events: Push. Users choose which repositories it can see.
+- **GitHub App user authorization during installation:** used once, to confirm the signed-in user can access the installation before we link it to their workspace. The resulting user token is revoked immediately and never stored.
+- **Store listings:** only public App Store / Google Play data. We fetch fixed store endpoints built from the app ID, never the pasted URL, with no redirects, a timeout and a size cap.
 
 ## Environments
 
@@ -59,4 +65,5 @@ We collect only what the product needs. A user can disconnect any account (we re
 - Logs are structured JSON and pass through a redaction helper that removes tokens, cookies, auth headers, webhook signatures, URL credentials and request bodies (`app/src/lib/log`).
 - Pages get a strict nonce-based Content-Security-Policy (no `unsafe-inline`; `unsafe-eval` in development only) and standard security headers; API responses get `default-src 'none'`.
 - CI runs type-checking, lint, tests, `npm audit --audit-level=high`, gitleaks and CodeQL on every push. Dependabot keeps dependencies current, and the lockfile is committed.
-- Incoming webhooks are verified with a constant-time signature check before parsing, and replays are rejected by delivery ID (from Phase 2).
+- Incoming GitHub webhooks: bodies over 1 MB are refused, the HMAC-SHA256 signature is checked in constant time before the body is parsed, a replayed delivery ID is ignored, and GitHub gets a quick 202 while a background job does the work. In production, plain-HTTP webhook requests are refused.
+- API routes are rate-limited per client address (sign-in 30/min, webhooks 300/min, other API 120/min; in memory, per instance).

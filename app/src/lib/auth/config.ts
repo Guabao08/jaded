@@ -41,7 +41,7 @@ export function buildAuthConfig(env: Env, deps: AuthDeps): NextAuthConfig {
       GitHub({
         clientId: env.AUTH_GITHUB_ID,
         clientSecret: env.AUTH_GITHUB_SECRET,
-        ...(env.AUTH_GITHUB_BASE_URL ? { enterprise: { baseUrl: env.AUTH_GITHUB_BASE_URL } } : {}),
+        ...(env.GITHUB_TEST_BASE_URL ? { enterprise: { baseUrl: env.GITHUB_TEST_BASE_URL } } : {}),
         // No scopes: sign-in only needs the public profile. No email is requested.
         authorization: { params: { scope: "" } },
         profile(profile: GitHubProfile) {

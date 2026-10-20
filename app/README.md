@@ -31,6 +31,27 @@ Sign-in uses a GitHub OAuth App and asks for **no scopes**: Jaded reads only the
 
 Use one OAuth App for local development and a separate one for staging.
 
+### GitHub App (repository access and pushes)
+
+Jaded reads repositories through a GitHub App, not the sign-in OAuth App. Create one per environment (local, staging, production) under the `jaded-app` organization: Organization settings → Developer settings → GitHub Apps → New GitHub App.
+
+| Setting                                                | Value                                                                                          | Why                                                                                 |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| GitHub App name                                        | e.g. `Jaded (dev)`                                                                             | Shown to users when they install it                                                 |
+| Homepage URL                                           | `APP_URL`                                                                                      |                                                                                     |
+| Callback URL                                           | `<APP_URL>/api/github/callback`                                                                | Where GitHub returns users after installing                                         |
+| Request user authorization (OAuth) during installation | **On**                                                                                         | Lets Jaded confirm the signed-in user can access the installation before linking it |
+| Webhook URL                                            | `<APP_URL>/api/github/webhook`                                                                 | Must be public HTTPS (staging, or a temporary tunnel for local testing)             |
+| Webhook secret                                         | output of `npm run keygen`                                                                     | Every delivery is signature-checked                                                 |
+| Repository permissions                                 | Contents: **Read**, Metadata: **Read**, Pull requests: **Read**; everything else **No access** | Read commits and diffs, list repos, find the PR linked to a push                    |
+| Account permissions                                    | none                                                                                           |                                                                                     |
+| Subscribe to events                                    | **Push**                                                                                       | Installation events are sent automatically                                          |
+| Where can it be installed                              | Only on this account, for now                                                                  | Public installs come with public signups                                            |
+
+After creating it: note the App ID and the URL name (slug, from `github.com/apps/<slug>`), generate a client secret, and generate a private key (a `.pem` download). Base64-encode the key for `GITHUB_APP_PRIVATE_KEY`, for example in PowerShell: `[Convert]::ToBase64String([IO.File]::ReadAllBytes("jaded.private-key.pem"))`. Then delete the downloaded file. Installation tokens are created per task with read-only permissions and never stored.
+
+Locally, everything except live webhooks works without a public URL. The tests send signed webhook payloads to the app directly (`tests/db/github.test.ts`, `e2e/github.spec.ts`).
+
 ### Staging (Render)
 
 `../render.yaml` is a Render Blueprint for staging: a Node web service plus managed Postgres (no public access). It deploys `main` after CI passes and runs `prisma migrate deploy` before each deploy.
@@ -65,7 +86,10 @@ CI (`.github/workflows/`) runs all of the above, plus a gitleaks scan of the ful
 - `src/auth.ts`, `src/lib/auth/`: Auth.js (GitHub sign-in, database sessions, allowlist), our adapter (hashed session tokens, no OAuth tokens stored), and session rotation on login.
 - `src/lib/workspaces.ts`: workspace queries, always scoped to the signed-in user's memberships.
 - `src/lib/audit.ts`: audit log writes (sign-in, denied sign-in, sign-out, session revocation).
-- `src/app/w/[workspaceId]/`: the dashboard shell.
+- `src/lib/github/`: GitHub App client (app JWT, short-lived installation tokens), webhook intake (signature, size cap, replay check, quick 202), background processing of pushes into Updates, and install linking.
+- `src/lib/stores/`: App Store and Google Play listing import.
+- `src/lib/worker.ts`, `src/instrumentation.ts`: the pg-boss worker, started with the server (set `JOBS_WORKER=off` to disable).
+- `src/app/w/[workspaceId]/`: the dashboard: overview, apps (repository, listing, brand profile and voice), updates.
 - `prisma/`: schema and migrations. The generated client goes to `src/generated/` (git-ignored).
 - `tests/unit/`, `tests/db/`, `e2e/`: Vitest unit and database tests, and Playwright tests.
 

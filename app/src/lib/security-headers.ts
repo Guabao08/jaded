@@ -30,7 +30,8 @@ export function buildPageCsp(nonce: string, isDev: boolean): string {
     // React needs eval in development only, for its debugging stacks.
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
     `style-src 'self' 'nonce-${nonce}'`,
-    "img-src 'self' blob: data:",
+    // App icons and screenshots imported from the App Store and Google Play.
+    "img-src 'self' blob: data: https://*.mzstatic.com https://play-lh.googleusercontent.com",
     "font-src 'self'",
     `connect-src 'self'${isDev ? " ws:" : ""}`,
     "object-src 'none'",

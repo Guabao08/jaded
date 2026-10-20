@@ -53,12 +53,16 @@ model Session {
 }
 
 model Workspace {
-  id          String       @id @default(cuid())
-  name        String
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  memberships Membership[]
-  auditLogs   AuditLog[]
+  id            String               @id @default(cuid())
+  name          String
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  memberships   Membership[]
+  auditLogs     AuditLog[]
+  installations GitHubInstallation[]
+  repositories  Repository[]
+  apps          App[]
+  updates       Update[]
 }
 
 enum MembershipRole {
@@ -96,4 +100,139 @@ model AuditLog {
   @@index([workspaceId, createdAt])
   @@index([actorUserId, createdAt])
   @@index([action, createdAt])
+}
+
+// Where a piece of text came from. Anything EXTERNAL_UNTRUSTED (commit
+// messages, PR titles, app store listings) is data written by someone else:
+// it is shown and stored, but it is only ever passed to the AI as quoted
+// data, never as instructions.
+enum ContentOrigin {
+  EXTERNAL_UNTRUSTED
+  USER
+}
+
+// A GitHub App installation linked to a workspace. No tokens are stored:
+// installation tokens are minted when needed and discarded.
+model GitHubInstallation {
+  id             String       @id @default(cuid())
+  workspaceId    String
+  installationId String       @unique
+  accountLogin   String
+  accountType    String
+  suspendedAt    DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  workspace      Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  repositories   Repository[]
+
+  @@index([workspaceId])
+}
+
+// A repository the installation gives us access to.
+model Repository {
+  id             String             @id @default(cuid())
+  workspaceId    String
+  installationId String
+  githubRepoId   String             @unique
+  fullName       String
+  private        Boolean
+  defaultBranch  String
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  workspace      Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  installation   GitHubInstallation @relation(fields: [installationId], references: [id], onDelete: Cascade)
+  apps           App[]
+  updates        Update[]
+
+  @@index([workspaceId])
+}
+
+// The developer's app: optionally linked to a repository and a store listing.
+model App {
+  id           String         @id @default(cuid())
+  workspaceId  String
+  name         String
+  repositoryId String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  workspace    Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  repository   Repository?    @relation(fields: [repositoryId], references: [id], onDelete: SetNull)
+  brandProfile BrandProfile?
+  listings     StoreListing[]
+
+  @@index([workspaceId])
+}
+
+enum StoreKind {
+  APP_STORE
+  GOOGLE_PLAY
+}
+
+// A snapshot of a public store listing, exactly as imported. Always untrusted.
+model StoreListing {
+  id          String        @id @default(cuid())
+  appId       String
+  store       StoreKind
+  storeAppId  String
+  sourceUrl   String
+  origin      ContentOrigin @default(EXTERNAL_UNTRUSTED)
+  name        String
+  description String
+  category    String?
+  iconUrl     String?
+  screenshots String[]
+  importedAt  DateTime      @default(now())
+  app         App           @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  @@unique([appId, store])
+}
+
+// The editable profile Jaded writes from. Prefilled from an import (and then
+// marked untrusted) until the user saves it.
+model BrandProfile {
+  id           String        @id @default(cuid())
+  appId        String        @unique
+  name         String
+  description  String
+  category     String?
+  iconUrl      String?
+  screenshots  String[]
+  origin       ContentOrigin @default(USER)
+  // Brand voice
+  tone         String?
+  audience     String?
+  wordsToAvoid String[]
+  updatedAt    DateTime      @updatedAt
+  app          App           @relation(fields: [appId], references: [id], onDelete: Cascade)
+}
+
+// Every webhook delivery ID we have accepted, so a replay is ignored.
+model WebhookDelivery {
+  id         String   @id @default(cuid())
+  deliveryId String   @unique
+  event      String
+  receivedAt DateTime @default(now())
+}
+
+// One push to a connected repository's default branch.
+model Update {
+  id           String        @id @default(cuid())
+  workspaceId  String
+  repositoryId String
+  deliveryId   String        @unique
+  ref          String
+  beforeSha    String
+  afterSha     String
+  pusherLogin  String?
+  compareUrl   String?
+  // Commit messages and PR titles come from GitHub users: untrusted.
+  origin       ContentOrigin @default(EXTERNAL_UNTRUSTED)
+  commits      Json
+  pullRequests Json
+  pushedAt     DateTime
+  createdAt    DateTime      @default(now())
+  workspace    Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  repository   Repository    @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt])
 }
