@@ -1,21 +1,53 @@
 // One command for local development: `npm run dev:local`.
-// Starts the local Postgres (data in app/.data/pg), applies migrations, then
-// runs `next dev`. Ctrl+C stops both.
+// Starts the local Postgres (data in app/.data/pg), or reuses it if it is
+// already running, applies migrations, then runs `next dev`. Ctrl+C stops
+// both (a database that was already running is left running).
 import { execSync, spawn } from "node:child_process";
 import { resolve } from "node:path";
-import { startPostgres } from "./pg.mjs";
+import { ensureLocalPostgres, portInUse } from "./pg.mjs";
 
-const port = Number(process.env.LOCAL_PG_PORT ?? 5433);
-const db = await startPostgres({ dir: resolve(".data/pg"), port, quiet: true });
-// The URL printed by `npm run db:local`; it matches the DATABASE_URL in .env.example.
+const fail = (message) => {
+  console.error(`\n${message}\n`);
+  process.exit(1);
+};
+
+const appPort = Number(process.env.PORT ?? 3000);
+if (await portInUse(appPort)) {
+  fail(
+    `Port ${appPort} is already in use, so Jaded may already be running (for example in the preview).\n` +
+      `Open http://localhost:${appPort}, or stop the other one first (Ctrl+C in its terminal, or stop the preview).`,
+  );
+}
+
+const pgPort = Number(process.env.LOCAL_PG_PORT ?? 5433);
+let db;
+try {
+  db = await ensureLocalPostgres({ dir: resolve(".data/pg"), port: pgPort });
+} catch (error) {
+  fail(error instanceof Error ? error.message : String(error));
+}
+console.log(
+  db.reused
+    ? `Using the local database already running on port ${pgPort}.`
+    : `Started the local database on port ${pgPort}.`,
+);
+
 const env = { ...process.env, DATABASE_URL: db.url };
-console.log(`Postgres is running on port ${port}.`);
-execSync("npx prisma migrate deploy", { env, stdio: "inherit" });
+try {
+  execSync("npx prisma migrate deploy", { env, stdio: "inherit" });
+} catch {
+  await db.stop();
+  fail("Applying database migrations failed (see above).");
+}
 
-const next = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", ...process.argv.slice(2)], {
-  env,
-  stdio: "inherit",
-});
+const next = spawn(
+  process.execPath,
+  ["node_modules/next/dist/bin/next", "dev", "-p", String(appPort), ...process.argv.slice(2)],
+  {
+    env,
+    stdio: "inherit",
+  },
+);
 
 let stopping = false;
 const stop = async (code = 0) => {
