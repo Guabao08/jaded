@@ -12,6 +12,10 @@ export default async function PostsPage({ params }: PageProps<"/w/[workspaceId]/
   const ws = await requireWorkspace(user.id, workspaceId);
   const [posts, spend] = await Promise.all([ws.listPosts(), ws.aiSpendThisMonth(usageMonth())]);
   const spent = spend._sum.estimatedCostMicro ?? 0;
+  // One block per update, newest first, so links like #update-<id> land on that update's drafts.
+  const byUpdate = new Map<string, typeof posts>();
+  for (const post of posts) byUpdate.set(post.update.id, [...(byUpdate.get(post.update.id) ?? []), post]);
+  const groups = [...byUpdate.entries()];
 
   return (
     <div className="stack">
@@ -28,39 +32,43 @@ export default async function PostsPage({ params }: PageProps<"/w/[workspaceId]/
         </p>
       </section>
 
-      {posts.length === 0 ? (
+      {groups.length === 0 ? (
         <section className="sheet">
           <p>No drafts yet. They appear here after a push that&rsquo;s worth a post.</p>
         </section>
       ) : (
-        posts.map((post) => (
-          <section key={post.id} className="sheet post" id={`update-${post.update.id}`}>
-            <p className="label">
-              {PLATFORM_NAME[post.platform]} · {post.app.name} · {post.update.repository.fullName}{" "}
-              <span className="mono">{post.update.afterSha.slice(0, 7)}</span> ·{" "}
-              <span className="badge" title={`Written by ${post.aiProvider} (${post.aiModel})`}>
-                AI-generated
-              </span>{" "}
-              · {post.status.toLowerCase()}
-            </p>
-            {/* Signed image links expire after 10 minutes; reloading the page makes fresh ones. */}
-            <div className="post-media">
-              {post.media.map((m) => (
-                <img
-                  key={m.id}
-                  src={signMediaPath(m.id)}
-                  alt={post.altText}
-                  width={m.width}
-                  height={m.height}
-                  loading="lazy"
-                />
-              ))}
-            </div>
-            <h2>{post.headline}</h2>
-            <p className="caption">{post.caption}</p>
-            {post.hashtags.length > 0 && <p className="muted">{post.hashtags.map((h) => `#${h}`).join(" ")}</p>}
-            <p className="muted">Alt text: {post.altText}</p>
-          </section>
+        groups.map(([updateId, group]) => (
+          <div key={updateId} id={`update-${updateId}`} className="stack">
+            {group.map((post) => (
+              <section key={post.id} className="sheet post">
+                <p className="label">
+                  {PLATFORM_NAME[post.platform]} · {post.app.name} · {post.update.repository.fullName}{" "}
+                  <span className="mono">{post.update.afterSha.slice(0, 7)}</span> ·{" "}
+                  <span className="badge" title={`Written by ${post.aiProvider} (${post.aiModel})`}>
+                    AI-generated
+                  </span>{" "}
+                  · {post.status.toLowerCase()}
+                </p>
+                {/* Signed image links expire after 10 minutes; reloading the page makes fresh ones. */}
+                <div className="post-media">
+                  {post.media.map((m) => (
+                    <img
+                      key={m.id}
+                      src={signMediaPath(m.id)}
+                      alt={post.altText}
+                      width={m.width}
+                      height={m.height}
+                      loading="lazy"
+                    />
+                  ))}
+                </div>
+                <h2>{post.headline}</h2>
+                <p className="caption">{post.caption}</p>
+                {post.hashtags.length > 0 && <p className="muted">{post.hashtags.map((h) => `#${h}`).join(" ")}</p>}
+                <p className="muted">Alt text: {post.altText}</p>
+              </section>
+            ))}
+          </div>
         ))
       )}
     </div>

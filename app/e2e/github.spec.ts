@@ -9,7 +9,9 @@ const bob = { id: 1002, login: "bob", name: "Bob" };
 
 const sql = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 test.afterAll(() => sql.end());
-test.describe.configure({ mode: "serial" });
+// Serial: tests build on each other. On a CI retry the whole group re-runs, so each step tolerates
+// work already done by the first attempt.
+test.describe.configure({ mode: "serial", timeout: 120_000 });
 
 async function signInAs(page: Page, user: typeof alice) {
   await page.request.post(`${MOCK_GITHUB}/__next-user`, { data: user });
@@ -55,7 +57,7 @@ async function sendPush(page: Page, deliveryId: string, sha: string, message: st
       "x-hub-signature-256": sign(body),
     },
   });
-  expect(res.status()).toBe(202);
+  expect([200, 202]).toContain(res.status());
 }
 
 async function waitFor(page: Page, url: string, text: string | RegExp) {
@@ -67,8 +69,11 @@ async function waitFor(page: Page, url: string, text: string | RegExp) {
 
 test("the owner connects GitHub, and a push shows up as an Update within a minute", async ({ page }) => {
   const workspace = await signInAs(page, alice);
-  await page.getByRole("button", { name: "Connect GitHub" }).click();
-  await expect(page.getByRole("status")).toHaveText("GitHub is connected.");
+  const connect = page.getByRole("button", { name: "Connect GitHub" });
+  if (await connect.isVisible()) {
+    await connect.click();
+    await expect(page.getByRole("status")).toHaveText("GitHub is connected.");
+  }
   await expect(page.getByText("Connected to alice with read-only access to 1 repository.")).toBeVisible();
 
   const body = push("abc1234".padEnd(40, "0"), "Ship offline mode\n\nWorks on the subway now.");
@@ -77,7 +82,7 @@ test("the owner connects GitHub, and a push shows up as an Update within a minut
     data: body,
     headers: { ...headers, "x-hub-signature-256": sign(body) },
   });
-  expect(accepted.status()).toBe(202);
+  expect([200, 202]).toContain(accepted.status()); // 200 = already received on a previous attempt
 
   const started = Date.now();
   await page.goto(`${workspace}/updates`);
@@ -138,15 +143,17 @@ test("a feature push becomes AI-labelled draft posts with images, served only th
   await waitFor(page, `${workspace}/updates`, /Drafts ready/);
   await expect(page.getByText("Worth a post").first()).toBeVisible();
 
-  await page.getByRole("link", { name: "View 2 drafts" }).click();
+  const feature = page.locator("li.update", { hasText: "feat: dark mode" });
+  await feature.getByRole("link", { name: "View 2 drafts" }).click();
   await expect(page.getByRole("heading", { name: "Draft posts" })).toBeVisible();
-  const instagram = page.locator("section.post", { hasText: "Instagram" }).first();
+  const group = page.locator(new URL(page.url()).hash);
+  const instagram = group.locator("section.post", { hasText: "Instagram" });
   await expect(instagram.getByText("AI-generated")).toBeVisible();
   await expect(instagram.getByRole("heading", { name: "Dark mode" })).toBeVisible();
   await expect(page.getByText(/AI use this month/)).toBeVisible();
 
   // Every image loads from a signed link.
-  const images = page.locator("section.post img");
+  const images = group.locator("section.post img");
   await expect(images).toHaveCount(4);
   for (const img of await images.all()) {
     await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth)).toBeGreaterThan(0);

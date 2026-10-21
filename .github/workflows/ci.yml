@@ -70,6 +70,13 @@ jobs:
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+      - name: Keep Playwright traces of failures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: app/test-results/
+          retention-days: 7
       - name: Startup refuses without required environment
         run: |
           if env -u DATABASE_URL timeout 60 npx next start -p 3200 > start.log 2>&1; then
