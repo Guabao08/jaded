@@ -44,6 +44,27 @@ function sign(body: string) {
   return `sha256=${createHmac("sha256", secret).update(body).digest("hex")}`;
 }
 
+async function sendPush(page: Page, deliveryId: string, sha: string, message: string) {
+  const body = push(sha, message);
+  const res = await page.request.post("/api/github/webhook", {
+    data: body,
+    headers: {
+      "content-type": "application/json",
+      "x-github-event": "push",
+      "x-github-delivery": deliveryId,
+      "x-hub-signature-256": sign(body),
+    },
+  });
+  expect(res.status()).toBe(202);
+}
+
+async function waitFor(page: Page, url: string, text: string | RegExp) {
+  await expect(async () => {
+    await page.goto(url);
+    await expect(page.getByText(text).first()).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout: 60_000 });
+}
+
 test("the owner connects GitHub, and a push shows up as an Update within a minute", async ({ page }) => {
   const workspace = await signInAs(page, alice);
   await page.getByRole("button", { name: "Connect GitHub" }).click();
@@ -62,7 +83,7 @@ test("the owner connects GitHub, and a push shows up as an Update within a minut
   await page.goto(`${workspace}/updates`);
   await expect(async () => {
     await page.reload();
-    await expect(page.getByText("Ship offline mode")).toBeVisible({ timeout: 1000 });
+    await expect(page.getByText("Ship offline mode").first()).toBeVisible({ timeout: 1000 });
   }).toPass({ timeout: 60_000 });
   expect(Date.now() - started).toBeLessThan(60_000);
   await expect(page.getByRole("link", { name: "#12 Dark mode" })).toBeVisible();
@@ -109,6 +130,58 @@ test("the owner adds an app, links the repository and sets the brand voice", asy
   await expect(page.getByRole("link", { name: "Demo" })).toBeVisible();
 });
 
+test("a feature push becomes AI-labelled draft posts with images, served only through signed links", async ({
+  page,
+}) => {
+  const workspace = await signInAs(page, alice);
+  await sendPush(page, "e2e-push-feature", "f00d".padEnd(40, "1"), "feat: dark mode\n\nEasier on the eyes at night.");
+  await waitFor(page, `${workspace}/updates`, /Drafts ready/);
+  await expect(page.getByText("Worth a post").first()).toBeVisible();
+
+  await page.getByRole("link", { name: "View 2 drafts" }).click();
+  await expect(page.getByRole("heading", { name: "Draft posts" })).toBeVisible();
+  const instagram = page.locator("section.post", { hasText: "Instagram" }).first();
+  await expect(instagram.getByText("AI-generated")).toBeVisible();
+  await expect(instagram.getByRole("heading", { name: "Dark mode" })).toBeVisible();
+  await expect(page.getByText(/AI use this month/)).toBeVisible();
+
+  // Every image loads from a signed link.
+  const images = page.locator("section.post img");
+  await expect(images).toHaveCount(4);
+  for (const img of await images.all()) {
+    await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth)).toBeGreaterThan(0);
+  }
+  const src = (await images.first().getAttribute("src"))!;
+  expect(src).toMatch(/^\/api\/media\/[a-z0-9]+\?exp=\d+&sig=[A-Za-z0-9_-]{43}$/);
+  const okRes = await page.request.get(src);
+  expect(okRes.status()).toBe(200);
+  expect(okRes.headers()["content-type"]).toBe("image/png");
+
+  // Without a valid signature, nothing is served.
+  const unsigned = src.split("?")[0];
+  expect((await page.request.get(unsigned)).status()).toBe(403);
+  expect((await page.request.get(src.replace(/sig=[^&]+/, "sig=" + "A".repeat(43)))).status()).toBe(403);
+  expect((await page.request.get(src.replace(/exp=\d+/, "exp=1000"))).status()).toBe(403);
+});
+
+test("a chore push is skipped, and the owner can choose to post about it anyway", async ({ page }) => {
+  const workspace = await signInAs(page, alice);
+  await sendPush(page, "e2e-push-chore", "c40e".padEnd(40, "2"), "chore: update dependencies");
+  await waitFor(page, `${workspace}/updates`, /Only maintenance commits/);
+  const chore = page.locator("li.update", { hasText: "chore: update dependencies" });
+  await expect(chore.getByText("Skipped")).toBeVisible();
+  await chore.getByRole("button", { name: "Post about this anyway" }).click();
+  await waitFor(page, `${workspace}/updates`, /You chose to post about this update/);
+  await expect(async () => {
+    await page.reload();
+    await expect(
+      page.locator("li.update", { hasText: "chore: update dependencies" }).getByText("Drafts ready"),
+    ).toBeVisible({
+      timeout: 1000,
+    });
+  }).toPass({ timeout: 60_000 });
+});
+
 test("another user cannot see the owner's app, repository or updates", async ({ page }) => {
   const { rows } = await sql.query('SELECT id, "workspaceId" FROM "App" LIMIT 1');
   const app = rows[0];
@@ -119,6 +192,8 @@ test("another user cannot see the owner's app, repository or updates", async ({ 
   expect(appPage?.status()).toBe(404);
   const updates = await page.goto(`/w/${app.workspaceId}/updates`);
   expect(updates?.status()).toBe(404);
+  const posts = await page.goto(`/w/${app.workspaceId}/posts`);
+  expect(posts?.status()).toBe(404);
   await page.goto(`${bobWorkspace}/updates`);
   await expect(page.getByText("Ship offline mode")).toHaveCount(0);
 });

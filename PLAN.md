@@ -48,7 +48,7 @@ To start a phase, the owner can say: *"Read PLAN.md and do the next phase."*
 - **Database:** PostgreSQL with Prisma.
 - **Background jobs:** pg-boss (a job queue on Postgres, so there's no extra service to run).
 - **File storage:** an S3-compatible bucket (Cloudflare R2 by default), private.
-- **AI:** Claude API for writing post text. An image-generation API for images and, later, a video-generation API, kept behind one interface so providers can be swapped.
+- **AI:** Google Gemini API for writing post text (owner's decision, 2026-10-21, replacing the Claude API default). The default model is `gemini-3.8-flash`, the newest Flash model on Gemini's free tier, with better writing than the Flash-Lite models; it can be changed with `GEMINI_MODEL`. It sits behind a `TextProvider` interface, with a deterministic stand-in for tests and CI. Images are template designs built from the app's own icon, screenshots and colours (no image-generation API yet), behind an `ImageRenderer` interface so AI images can be added later. Video comes later.
 - **Hosting:** a managed host with built-in secrets and managed Postgres (Render by default), with separate staging and production.
 - **Code location:** a new `app/` folder in this repo. ShipBrief stays at the root until Phase 2 has ported what it needs, then it is deleted.
 
@@ -193,7 +193,7 @@ Status: [ ] built and tested locally; live check waits on the GitHub App and a p
 ---
 
 ## Phase 3 — Post generation (images)
-Status: [ ] not started
+Status: [ ] built and tested locally; waiting on the owner's Gemini key for a live run (see notes)
 
 **Goal:** each meaningful update becomes ready-to-review posts.
 
@@ -211,6 +211,17 @@ Status: [ ] not started
 - Media served only through signed URLs that expire.
 
 **Done when** a test push produces draft posts with text and images the owner can see.
+
+**Notes (Phase 3)**
+- Owner's decisions (2026-10-21): Gemini for text, template images now with AI images possible later, and a $10/month cap per workspace (`AI_MONTHLY_CAP_USD`).
+- Deciding: each push gets a rule-based "worth a post?" decision with a readable reason. Bots, chores, CI, docs, tests, refactors, dependency bumps, merges and typo/WIP commits are skipped; feat/fix/perf and other real changes are posted. The owner can override on the Updates page ("Post about this anyway" or "Skip") and use "Generate again".
+- Writing: one draft per platform (Instagram and Facebook first, per the platform order) with headline, caption, hashtags and alt text, using the brand profile and voice. Prompt-injection defence comes in three layers: (1) instructions only in the system message; (2) commits, PR titles and imported store text sent as escaped JSON inside `<untrusted_data>`, so they can't close the block; (3) every reply is validated before saving (schema, length, no links, emails, secrets, echoed instructions or avoided words). A failing reply is retried once, then nothing is saved. Tests cover a stand-in model obeying an injection (blocked) and one ignoring it (normal post). `npm run check:ai` runs the same check against the real Gemini key.
+- Images: two per post at platform sizes (Instagram 1080x1350 and 1080x1080; Facebook 1200x630 and 1080x1080), rendered on the server with satori + resvg using the app's icon, first screenshot and brand colour (from the profile, else picked from the icon). Store images are fetched only from Apple and Google image hosts.
+- Storage and access: images are stored privately (local `app/.data/media` until a bucket is chosen; the `MediaStorage` interface is ready for R2) and served only through `/api/media/<id>` links signed with HMAC-SHA256 that expire after 10 minutes (at most 1 hour).
+- AI labels and cost: every Post and Media is marked `aiGenerated`, with provider and model, and the Posts page shows an "AI-generated" badge. Each AI call is recorded in `AiUsage` with tokens and estimated cost at list price, even on the free tier. Generation stops at the monthly cap with a clear note. Free-tier limits: a 429 is turned into a wait using Google's retry delay (an hour for the daily quota), the job is rescheduled with backoff, and it gives up after six tries with a message.
+- Found and fixed: local Postgres on Windows was created with WIN1252 encoding, which can't store emoji or non-Latin text. New local databases are UTF-8, and `npm run dev:local` converts an existing local database automatically, keeping all rows and a backup.
+- Tests: Vitest unit and database tests (decisions, prompt and injection, output checks, Gemini errors and rate limits, cost, signed URLs, storage paths, image fetching and rendering, the pipeline including cap, rate limit, unsafe output, regenerate, emoji text and isolation, and the encoding conversion), plus Playwright tests: a feature push becomes AI-labelled drafts whose images load only through signed links; a chore push is skipped and can be overridden; another user gets 404 on the Posts page.
+- Waiting on the owner: add `GEMINI_API_KEY` to `app/.env` (aistudio.google.com/apikey), run `npm run check:ai`, then push to a connected repo. Live pushes still need a public URL or a tunnel.
 
 ---
 

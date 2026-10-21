@@ -11,7 +11,8 @@ const SAVED: Record<string, string> = {
 };
 const ERRORS: Record<string, string> = {
   repo: "That repository isn't connected to this workspace.",
-  profile: "Check the profile fields: a name is required and the description can be up to 5,000 characters.",
+  profile:
+    "Check the profile fields: a name is required, the description can be up to 5,000 characters and the colour looks like #c94f39.",
   voice: "Check the brand voice fields and try again.",
 };
 
@@ -134,6 +135,18 @@ export default async function AppPage({ params, searchParams }: PageProps<"/w/[w
             name="category"
             maxLength={100}
             defaultValue={profile?.category ?? ""}
+            className="input"
+          />
+          <label className="label" htmlFor="p-color">
+            Brand colour (leave empty to use your icon&rsquo;s colour)
+          </label>
+          <input
+            id="p-color"
+            name="brandColor"
+            maxLength={7}
+            pattern="#[0-9a-fA-F]{6}"
+            placeholder="#c94f39"
+            defaultValue={profile?.brandColor ?? ""}
             className="input"
           />
           <label className="label" htmlFor="p-description">

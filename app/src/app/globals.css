@@ -257,3 +257,47 @@ a:hover {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.decision {
+  border-top: 1px solid var(--border-soft);
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.decision .status {
+  color: var(--ink-secondary);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.badge {
+  display: inline-block;
+  background: var(--acetate-sand);
+  color: var(--ink-primary);
+  border-radius: 2px;
+  padding: 1px 6px;
+  letter-spacing: 0.05em;
+}
+
+.post-media {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  margin: 8px 0 16px;
+  padding-bottom: 8px;
+}
+
+.post-media img {
+  height: 280px;
+  width: auto;
+  border: 1px solid var(--border-soft);
+  border-radius: 2px;
+}
+
+.caption {
+  white-space: pre-wrap;
+}

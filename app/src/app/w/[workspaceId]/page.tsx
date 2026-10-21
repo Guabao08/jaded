@@ -97,7 +97,11 @@ export default async function WorkspaceOverview({ params, searchParams }: PagePr
 
       <section className="sheet">
         <h2>Recent updates</h2>
-        <UpdateList updates={updates} empty="Pushes to a linked repository's default branch will show up here." />
+        <UpdateList
+          workspaceId={ws.workspace.id}
+          updates={updates}
+          empty="Pushes to a linked repository's default branch will show up here."
+        />
         {updates.length > 0 && <Link href={`/w/${id}/updates`}>All updates</Link>}
       </section>
     </div>

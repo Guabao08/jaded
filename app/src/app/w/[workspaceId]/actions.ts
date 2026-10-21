@@ -10,6 +10,7 @@ import { INSTALL_STATE_COOKIE, INSTALL_STATE_MAX_AGE, newInstallState } from "@/
 import { log } from "@/lib/log";
 import { importListing, ListingError, parseListingUrl } from "@/lib/stores";
 import { requireWorkspace } from "@/lib/workspaces";
+import { queueGeneration } from "@/lib/worker";
 
 // Server actions only accept same-origin POSTs (Next.js checks the Origin
 // header), which is the CSRF protection for these forms. Every action
@@ -123,6 +124,16 @@ const profileSchema = z.object({
   name: line(200),
   description: z.string().trim().max(5000),
   category: optionalLine(100),
+  brandColor: z
+    .string()
+    .trim()
+    .transform((v) => v.toLowerCase() || null)
+    .pipe(
+      z
+        .string()
+        .regex(/^#[0-9a-f]{6}$/)
+        .nullable(),
+    ),
 });
 
 export async function saveBrandProfile(workspaceId: string, appId: string, formData: FormData) {
@@ -172,4 +183,33 @@ export async function saveBrandVoice(workspaceId: string, appId: string, formDat
     create: { ...parsed.data, appId: app.id, name: app.name, description: "", screenshots: [] },
   });
   redirect(`/w/${ws.workspace.id}/apps/${app.id}?saved=voice`);
+}
+
+/** The user overrides Jaded's "post or skip" call for an Update. */
+export async function setUpdateDecision(workspaceId: string, updateId: string, decision: "POST" | "SKIP") {
+  const { ws } = await scope(workspaceId);
+  const update = await ws.getUpdate(id.parse(updateId));
+  if (!update) redirect(`/w/${ws.workspace.id}/updates`);
+  const choice = z.enum(["POST", "SKIP"]).parse(decision);
+  await db().update.update({
+    where: { id: update.id },
+    data: {
+      decision: choice,
+      decisionByUser: true,
+      decisionReason: choice === "POST" ? "You chose to post about this update." : "You chose to skip this update.",
+      ...(choice === "POST" ? { generationStatus: "QUEUED", generationNote: null } : {}),
+    },
+  });
+  if (choice === "POST" && update.generationStatus !== "DONE") await queueGeneration(update.id);
+  redirect(`/w/${ws.workspace.id}/updates`);
+}
+
+/** Writes the drafts for an Update again (replacing the current drafts). */
+export async function regeneratePosts(workspaceId: string, updateId: string) {
+  const { ws } = await scope(workspaceId);
+  const update = await ws.getUpdate(id.parse(updateId));
+  if (!update || update.decision !== "POST") redirect(`/w/${ws.workspace.id}/updates`);
+  await db().update.update({ where: { id: update.id }, data: { generationStatus: "QUEUED", generationNote: null } });
+  await queueGeneration(update.id);
+  redirect(`/w/${ws.workspace.id}/updates`);
 }

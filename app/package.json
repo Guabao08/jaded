@@ -20,17 +20,22 @@
     "db:local": "node scripts/local-db.mjs",
     "dev:local": "node scripts/dev-local.mjs",
     "postinstall": "prisma generate",
-    "prepare": "git -C .. config core.hooksPath .githooks || true"
+    "prepare": "git -C .. config core.hooksPath .githooks || true",
+    "check:ai": "vitest run --config vitest.live.config.ts"
   },
   "dependencies": {
+    "@fontsource/dm-sans": "^5.3.0",
+    "@fontsource/frank-ruhl-libre": "^5.3.0",
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
+    "@resvg/resvg-js": "^2.6.2",
     "next": "16.4.2",
     "next-auth": "^5.0.0-beta.32",
     "pg": "^8.23.1",
     "pg-boss": "^12.38.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "satori": "^0.63.2",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -52,5 +57,8 @@
   },
   "engines": {
     "node": ">=20.12"
+  },
+  "overrides": {
+    "fflate": "^0.8.2"
   }
 }

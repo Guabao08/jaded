@@ -4,6 +4,7 @@
 // both (a database that was already running is left running).
 import { execSync, spawn } from "node:child_process";
 import { resolve } from "node:path";
+import { ensureUtf8 } from "./db-encoding.mjs";
 import { ensureLocalPostgres, portInUse } from "./pg.mjs";
 
 const fail = (message) => {
@@ -33,6 +34,12 @@ console.log(
 );
 
 const env = { ...process.env, DATABASE_URL: db.url };
+try {
+  await ensureUtf8(db.url);
+} catch (error) {
+  await db.stop();
+  fail(error instanceof Error ? error.message : String(error));
+}
 try {
   execSync("npx prisma migrate deploy", { env, stdio: "inherit" });
 } catch {

@@ -10,6 +10,7 @@ process.env.AUTH_SECRET = randomBytes(32).toString("base64");
 process.env.AUTH_GITHUB_ID = "test-client-id";
 process.env.AUTH_GITHUB_SECRET = "test-client-secret";
 process.env.AUTH_ALLOWED_GITHUB_IDS = "1001,1002";
+process.env.AI_PROVIDER = "fake";
 
 // Close the database pool so the test run can exit cleanly.
 afterAll(async () => {

@@ -1,11 +1,14 @@
 import type { PrismaClient } from "@/generated/prisma/client";
 import { log } from "../log";
+import { decideUpdate } from "../posts/decide";
 import type { GitHubClient } from "./client";
 import type { GitHubEventJob } from "./receive";
 
 export interface ProcessDeps {
   db: () => PrismaClient;
   github: GitHubClient | null;
+  /** Queues post generation for an Update marked POST. */
+  enqueueGeneration?: (updateId: string) => Promise<void>;
 }
 
 /** Runs one queued GitHub event. Safe to retry: every write is idempotent. */
@@ -25,11 +28,12 @@ async function processPush(job: Extract<GitHubEventJob, { kind: "push" }>, deps:
   if (push.ref !== `refs/heads/${repo.defaultBranch}`) return; // Only the default branch becomes an Update.
 
   const pullRequests = await linkedPullRequests(repo.installation.installationId, repo, push.commits, deps);
+  const { decision, reason } = decideUpdate({ pusherLogin: push.pusherLogin, commits: push.commits });
 
-  await deps.db().update.upsert({
-    where: { deliveryId: job.deliveryId },
-    update: {},
-    create: {
+  const existing = await deps.db().update.findUnique({ where: { deliveryId: job.deliveryId }, select: { id: true } });
+  if (existing) return; // Retried job: already recorded.
+  const created = await deps.db().update.create({
+    data: {
       workspaceId: repo.workspaceId,
       repositoryId: repo.id,
       deliveryId: job.deliveryId,
@@ -41,8 +45,12 @@ async function processPush(job: Extract<GitHubEventJob, { kind: "push" }>, deps:
       commits: push.commits as object[],
       pullRequests,
       pushedAt: new Date(push.pushedAt),
+      decision,
+      decisionReason: reason,
+      generationStatus: decision === "POST" ? "QUEUED" : "NOT_STARTED",
     },
   });
+  if (decision === "POST" && deps.enqueueGeneration) await deps.enqueueGeneration(created.id);
 }
 
 async function linkedPullRequests(

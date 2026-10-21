@@ -52,6 +52,8 @@ export default defineConfig({
         GITHUB_APP_CLIENT_ID: "e2e-app-client-id",
         GITHUB_APP_CLIENT_SECRET: "e2e-app-client-secret",
         GITHUB_WEBHOOK_SECRET: process.env.E2E_WEBHOOK_SECRET ?? "",
+        AI_PROVIDER: "fake",
+        MEDIA_DIR: process.env.E2E_MEDIA_DIR ?? ".data/e2e-media",
       },
     },
   ],

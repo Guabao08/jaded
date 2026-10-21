@@ -2,6 +2,9 @@ import { db } from "@/lib/db";
 
 export async function resetDatabase() {
   const client = db();
+  await client.media.deleteMany();
+  await client.post.deleteMany();
+  await client.aiUsage.deleteMany();
   await client.update.deleteMany();
   await client.webhookDelivery.deleteMany();
   await client.storeListing.deleteMany();

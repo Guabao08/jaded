@@ -15,6 +15,8 @@ try {
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Native/WASM image libraries used on the server to render post images.
+  serverExternalPackages: ["@resvg/resvg-js", "satori"],
   // cacheComponents and partial prefetching are left off on purpose: the
   // nonce-based CSP needs every page rendered per request, and Next.js
   // documents partial prerendering as incompatible with nonces.
