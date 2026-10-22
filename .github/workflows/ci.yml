@@ -68,8 +68,22 @@ jobs:
       - run: npm test
       - run: npm audit --audit-level=high
       - run: npm run build
-      - run: npx playwright install --with-deps chromium
+      - name: Install Playwright's Chromium (retries on flaky package mirrors)
+        run: |
+          for attempt in 1 2 3; do
+            npx playwright install --with-deps chromium && exit 0
+            echo "Install failed (attempt $attempt); retrying in 20s"
+            sleep 20
+          done
+          exit 1
       - run: npm run test:e2e
+      - name: Keep Playwright traces of failures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: app/test-results/
+          retention-days: 7
       - name: Startup refuses without required environment
         run: |
           if env -u DATABASE_URL timeout 60 npx next start -p 3200 > start.log 2>&1; then

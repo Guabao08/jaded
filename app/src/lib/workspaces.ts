@@ -57,9 +57,27 @@ export async function workspaceScope(userId: string, workspaceId: string) {
     listUpdates: (take = 50) =>
       db().update.findMany({
         where: { workspaceId: id },
-        include: { repository: { select: { fullName: true } } },
+        include: { repository: { select: { fullName: true } }, _count: { select: { posts: true } } },
         orderBy: { createdAt: "desc" },
         take,
+      }),
+    getUpdate: (updateId: string) => db().update.findFirst({ where: { id: updateId, workspaceId: id } }),
+    listPosts: (take = 50) =>
+      db().post.findMany({
+        where: { workspaceId: id },
+        include: {
+          media: { orderBy: { position: "asc" } },
+          app: { select: { name: true } },
+          update: { select: { id: true, afterSha: true, repository: { select: { fullName: true } } } },
+        },
+        orderBy: [{ createdAt: "desc" }, { platform: "asc" }],
+        take,
+      }),
+    aiSpendThisMonth: async (month: string) =>
+      await db().aiUsage.aggregate({
+        where: { workspaceId: id, month },
+        _sum: { estimatedCostMicro: true },
+        _count: true,
       }),
   };
 }

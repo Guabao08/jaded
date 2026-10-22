@@ -12,9 +12,14 @@ export default async function UpdatesPage({ params }: PageProps<"/w/[workspaceId
       <p className="label">Updates</p>
       <h1>Updates</h1>
       <p>
-        Each push to a linked repository&rsquo;s default branch. Posts will be drafted from these in the next phase.
+        Each push to a linked repository&rsquo;s default branch. Jaded decides which are worth a post (you can override)
+        and writes drafts for those.
       </p>
-      <UpdateList updates={updates} empty="No updates yet. Push to a connected repository's default branch." />
+      <UpdateList
+        workspaceId={ws.workspace.id}
+        updates={updates}
+        empty="No updates yet. Push to a connected repository's default branch."
+      />
     </section>
   );
 }

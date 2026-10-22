@@ -17,7 +17,7 @@ export default defineConfig({
   reporter: process.env.CI ? "github" : "list",
   // The app's URL uses "localhost", not 127.0.0.1: Next.js's NextRequest rewrites
   // a 127.0.0.1 host to localhost, which would break Auth.js's same-origin checks.
-  use: { baseURL: `http://localhost:${PORT}` },
+  use: { baseURL: `http://localhost:${PORT}`, trace: "retain-on-failure" },
   // CI installs Playwright's Chromium. Locally, PW_CHANNEL=msedge or chrome uses an installed browser.
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"], channel: process.env.PW_CHANNEL } }],
   webServer: [
@@ -52,6 +52,8 @@ export default defineConfig({
         GITHUB_APP_CLIENT_ID: "e2e-app-client-id",
         GITHUB_APP_CLIENT_SECRET: "e2e-app-client-secret",
         GITHUB_WEBHOOK_SECRET: process.env.E2E_WEBHOOK_SECRET ?? "",
+        AI_PROVIDER: "fake",
+        MEDIA_DIR: process.env.E2E_MEDIA_DIR ?? ".data/e2e-media",
       },
     },
   ],

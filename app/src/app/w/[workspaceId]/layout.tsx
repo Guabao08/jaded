@@ -27,6 +27,11 @@ export default async function WorkspaceLayout({ children, params }: LayoutProps<
               Updates
             </NavLink>
           </li>
+          <li>
+            <NavLink href={`/w/${workspace.id}/posts`} activeClassName={styles.active}>
+              Posts
+            </NavLink>
+          </li>
         </ul>
       </nav>
       <div className={styles.account}>

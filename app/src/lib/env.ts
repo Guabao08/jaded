@@ -48,10 +48,25 @@ export const envSchema = z
     GITHUB_APP_CLIENT_ID: z.string().min(1).optional(),
     GITHUB_APP_CLIENT_SECRET: z.string().min(1).optional(),
     GITHUB_WEBHOOK_SECRET: z.string().min(32, "must be at least 32 characters").optional(),
+    // Post writing. "fake" is a stand-in for tests and local runs, allowed only with a loopback APP_URL.
+    AI_PROVIDER: z.enum(["gemini", "fake"]).default("gemini"),
+    // Server-only. Without it, generation waits with a "not configured" note.
+    GEMINI_API_KEY: z.string().min(20, "doesn't look like a Gemini API key").optional(),
+    GEMINI_MODEL: z
+      .string()
+      .regex(/^[a-z0-9.-]+$/, "must be a Gemini model ID such as gemini-3.8-flash")
+      .default("gemini-3.8-flash"),
+    // Estimated AI spend allowed per workspace per calendar month (UTC), in US dollars.
+    AI_MONTHLY_CAP_USD: z.coerce.number().min(0).max(1000).default(10),
+    // Where generated images are stored until a cloud bucket is configured. Private; never served directly.
+    MEDIA_DIR: z.string().min(1).default(".data/media"),
   })
   .superRefine((env, ctx) => {
     if (!httpsInProduction(env.APP_URL, env.NODE_ENV)) {
       ctx.addIssue({ code: "custom", path: ["APP_URL"], message: "must use https in production" });
+    }
+    if (env.AI_PROVIDER === "fake" && !isLoopbackUrl(env.APP_URL)) {
+      ctx.addIssue({ code: "custom", path: ["AI_PROVIDER"], message: "fake is only allowed for local testing" });
     }
     if (["127.0.0.1", "[::1]"].includes(new URL(env.APP_URL).hostname)) {
       // Next.js rewrites loopback IPs to "localhost" in requests, which breaks sign-in redirects.

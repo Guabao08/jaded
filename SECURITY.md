@@ -21,6 +21,8 @@ This section grows as features are built. Items marked _planned_ are not stored 
 | Webhook delivery IDs | Reject replayed deliveries | Postgres (`WebhookDelivery`) | IDs and event names only, no payloads |
 | Updates: pushes to a connected repo's default branch (commit SHAs, messages, links, pusher login, linked PR titles) | Source for posts | Postgres (`Update`) | Marked `EXTERNAL_UNTRUSTED`. Commit author emails are dropped on intake and never stored. |
 | Apps, imported store listings, brand profiles and voice | What posts are about and how they sound | Postgres (`App`, `StoreListing`, `BrandProfile`) | Imported listing text is marked `EXTERNAL_UNTRUSTED`; a profile becomes `USER` only when the user saves it. Images stay on the stores' own hosts. |
+| Draft posts (caption, hashtags, alt text, headline) and their images | Review and, later, publishing | Postgres (`Post`, `Media`); image files in private storage (`app/.data/media` locally, a private bucket later) | Marked `aiGenerated` with provider and model. Images are served only through HMAC-signed links that expire after 10 minutes (at most 1 hour). |
+| AI usage records (tokens, estimated cost, model) | Monthly budget per workspace | Postgres (`AiUsage`) | No prompt or reply text is stored |
 | OAuth tokens for Meta, Google, TikTok (_planned_) | Publish posts | Postgres | App-level envelope encryption (below), on top of at-rest encryption |
 | GitHub App private key, client secret, webhook secret | Act as the App, verify webhooks | Host secret manager / local `.env` | Never in the database or code |
 | Generated images and videos (_planned_) | Posts | Private S3-compatible bucket | Encrypted at rest; shared only by short-lived signed URLs |
@@ -44,6 +46,7 @@ We collect only what the product needs. A user can disconnect any account (we re
 - **GitHub sign-in (OAuth App): no scopes.** Sign-in needs only the public profile, which GitHub returns without any scope. We do not ask for email or repository access at sign-in.
 - **GitHub App, repository permissions, all read-only:** Metadata (required by GitHub; lists the installed repos), Contents (read commits behind a push), Pull requests (find the PR a push came from). No write access and no account permissions. Events: Push. Users choose which repositories it can see.
 - **GitHub App user authorization during installation:** used once, to confirm the signed-in user can access the installation before we link it to their workspace. The resulting user token is revoked immediately and never stored.
+- **AI provider (Google Gemini):** to write a post, Jaded sends Google the app's name, category, description and brand voice, and the push's commit messages and PR titles. No tokens, emails or user account data are sent. The API key is used only on the server (in a header, never in URLs, logs or the browser). On Gemini's free tier, Google may use prompts to improve its products; switch to a paid key before real users' data is processed (to do before public launch).
 - **Store listings:** only public App Store / Google Play data. We fetch fixed store endpoints built from the app ID, never the pasted URL, with no redirects, a timeout and a size cap.
 
 ## Environments
@@ -66,4 +69,5 @@ We collect only what the product needs. A user can disconnect any account (we re
 - Pages get a strict nonce-based Content-Security-Policy (no `unsafe-inline`; `unsafe-eval` in development only) and standard security headers; API responses get `default-src 'none'`.
 - CI runs type-checking, lint, tests, `npm audit --audit-level=high`, gitleaks and CodeQL on every push. Dependabot keeps dependencies current, and the lockfile is committed.
 - Incoming GitHub webhooks: bodies over 1 MB are refused, the HMAC-SHA256 signature is checked in constant time before the body is parsed, a replayed delivery ID is ignored, and GitHub gets a quick 202 while a background job does the work. In production, plain-HTTP webhook requests are refused.
+- AI output is untrusted too: commit and listing text goes to the model only as escaped data, and every reply is checked (schema, lengths, no links, emails, secrets or echoed instructions) before anything is saved. Generation stops at the workspace's monthly AI budget.
 - API routes are rate-limited per client address (sign-in 30/min, webhooks 300/min, other API 120/min; in memory, per instance).

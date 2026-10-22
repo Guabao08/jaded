@@ -4,6 +4,7 @@ import { log } from "./log";
 
 export const QUEUES = {
   githubEvent: "github-event",
+  generatePosts: "generate-posts",
 } as const;
 
 let boss: Promise<PgBoss> | undefined;
@@ -26,7 +27,11 @@ export function jobs(): Promise<PgBoss> {
   return boss;
 }
 
-export async function enqueue(name: string, data: object, options: { singletonKey?: string } = {}): Promise<void> {
+export async function enqueue(
+  name: string,
+  data: object,
+  options: { singletonKey?: string; startAfter?: number } = {},
+): Promise<void> {
   const queue = await jobs();
   await queue.send(name, data, { retryLimit: 5, retryDelay: 30, retryBackoff: true, ...options });
 }

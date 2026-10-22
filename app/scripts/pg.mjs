@@ -29,6 +29,21 @@ export function localDatabaseUrl(port, database = "jaded") {
   return `postgresql://${USER}:${PASSWORD}@127.0.0.1:${port}/${database}`;
 }
 
+/** Creates `name` as a UTF-8 database if it does not exist yet. */
+export async function createUtf8Database(adminUrl, name) {
+  if (!/^[a-z0-9_]+$/.test(name)) throw new Error(`Bad database name ${name}`);
+  const client = new pg.Client({ connectionString: adminUrl });
+  await client.connect();
+  try {
+    const { rowCount } = await client.query("SELECT 1 FROM pg_database WHERE datname = $1", [name]);
+    if (!rowCount) {
+      await client.query(`CREATE DATABASE "${name}" ENCODING 'UTF8' LC_COLLATE 'C' LC_CTYPE 'C' TEMPLATE template0`);
+    }
+  } finally {
+    await client.end();
+  }
+}
+
 /** True if something accepts TCP connections on 127.0.0.1:port. */
 export function portInUse(port) {
   return new Promise((resolve) => {
@@ -94,17 +109,16 @@ export async function startPostgres(options = {}) {
     user: USER,
     password: PASSWORD,
     persistent,
+    // UTF-8 everywhere. Without this, Windows creates WIN1252 databases that
+    // cannot store emoji or non-Latin text (common in commit messages).
+    initdbFlags: ["--encoding=UTF8", "--locale=C"],
     postgresFlags: ["-c", "listen_addresses=127.0.0.1"],
     onLog: options.quiet ? () => {} : (message) => process.stdout.write(String(message)),
     onError: (error) => process.stderr.write(String(error) + "\n"),
   });
   if (!persistent || !existsSync(join(dir, "PG_VERSION"))) await pg.initialise();
   await pg.start();
-  try {
-    await pg.createDatabase(database);
-  } catch {
-    // Already exists.
-  }
+  await createUtf8Database(localDatabaseUrl(port, "postgres"), database);
   return {
     url: localDatabaseUrl(port, database),
     stop: async () => {

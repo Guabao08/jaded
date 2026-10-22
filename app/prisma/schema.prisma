@@ -63,6 +63,8 @@ model Workspace {
   repositories  Repository[]
   apps          App[]
   updates       Update[]
+  posts         Post[]
+  aiUsage       AiUsage[]
 }
 
 enum MembershipRole {
@@ -159,6 +161,7 @@ model App {
   repository   Repository?    @relation(fields: [repositoryId], references: [id], onDelete: SetNull)
   brandProfile BrandProfile?
   listings     StoreListing[]
+  posts        Post[]
 
   @@index([workspaceId])
 }
@@ -198,6 +201,8 @@ model BrandProfile {
   iconUrl      String?
   screenshots  String[]
   origin       ContentOrigin @default(USER)
+  // Main brand colour as #rrggbb; picked from the icon when not set.
+  brandColor   String?
   // Brand voice
   tone         String?
   audience     String?
@@ -234,5 +239,107 @@ model Update {
   workspace    Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   repository   Repository    @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
 
+  // Phase 3: is this push worth posting about, and where generation stands.
+  decision         PostDecision     @default(PENDING)
+  decisionReason   String?
+  decisionByUser   Boolean          @default(false)
+  generationStatus GenerationStatus @default(NOT_STARTED)
+  generationNote   String?
+  posts            Post[]
+
   @@index([workspaceId, createdAt])
+}
+
+enum PostDecision {
+  PENDING
+  POST
+  SKIP
+}
+
+enum GenerationStatus {
+  NOT_STARTED
+  NEEDS_APP
+  QUEUED
+  GENERATING
+  RATE_LIMITED
+  CAPPED
+  NOT_CONFIGURED
+  DONE
+  FAILED
+}
+
+enum Platform {
+  INSTAGRAM
+  FACEBOOK
+}
+
+enum PostStatus {
+  DRAFT
+  APPROVED
+  REJECTED
+  PUBLISHED
+}
+
+// A post draft for one platform, generated from an Update.
+model Post {
+  id          String     @id @default(cuid())
+  workspaceId String
+  updateId    String
+  appId       String
+  platform    Platform
+  status      PostStatus @default(DRAFT)
+  caption     String
+  hashtags    String[]
+  altText     String
+  headline    String
+  // Every generated post is labelled as AI-made at publish time.
+  aiGenerated Boolean    @default(true)
+  aiProvider  String
+  aiModel     String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  update      Update     @relation(fields: [updateId], references: [id], onDelete: Cascade)
+  app         App        @relation(fields: [appId], references: [id], onDelete: Cascade)
+  media       Media[]
+
+  @@unique([updateId, platform])
+  @@index([workspaceId, createdAt])
+}
+
+// An image stored privately; served only through short-lived signed URLs.
+model Media {
+  id          String   @id @default(cuid())
+  postId      String
+  storageKey  String   @unique
+  contentType String
+  width       Int
+  height      Int
+  bytes       Int
+  // How it was made, e.g. "template:hero-v1". AI-written text on it counts as AI content.
+  generator   String
+  aiGenerated Boolean  @default(true)
+  position    Int
+  createdAt   DateTime @default(now())
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+}
+
+// One AI call, with its estimated cost, for the monthly cap.
+model AiUsage {
+  id                 String    @id @default(cuid())
+  workspaceId        String
+  month              String // "2026-10" (UTC)
+  provider           String
+  model              String
+  purpose            String
+  inputTokens        Int
+  outputTokens       Int
+  // Estimated at paid list prices, in millionths of a dollar, even on a free tier.
+  estimatedCostMicro Int
+  createdAt          DateTime  @default(now())
+  workspace          Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, month])
 }
