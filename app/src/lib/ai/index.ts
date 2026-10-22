@@ -10,7 +10,11 @@ export function textProvider(): TextProvider | null {
   const e = env();
   if (e.AI_PROVIDER === "fake") return createFakeProvider();
   if (!e.GEMINI_API_KEY) return null;
-  return createGeminiProvider({ apiKey: e.GEMINI_API_KEY, model: e.GEMINI_MODEL });
+  return createGeminiProvider({
+    apiKey: e.GEMINI_API_KEY,
+    model: e.GEMINI_MODEL,
+    fallbackModel: e.GEMINI_FALLBACK_MODEL || null,
+  });
 }
 
 /** Monthly AI budget per workspace, in micro-dollars. */
