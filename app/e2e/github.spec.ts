@@ -60,6 +60,27 @@ async function sendPush(page: Page, deliveryId: string, sha: string, message: st
   expect([200, 202]).toContain(res.status());
 }
 
+/** Waits until the Update whose head commit is `sha` reaches `status`; reports its last status if not. */
+async function waitForGeneration(sha: string, status: string) {
+  let last = "not found";
+  await expect
+    .poll(
+      async () => {
+        const { rows } = await sql.query(
+          'SELECT "generationStatus", "generationNote" FROM "Update" WHERE "afterSha" = $1',
+          [sha],
+        );
+        last = rows[0] ? `${rows[0].generationStatus}: ${rows[0].generationNote ?? ""}` : "not found";
+        return rows[0]?.generationStatus;
+      },
+      { timeout: 90_000, intervals: [500, 1000, 2000], message: `update ${sha.slice(0, 7)} never reached ${status}` },
+    )
+    .toBe(status)
+    .catch((error) => {
+      throw new Error(`${error.message}\nLast status: ${last}`);
+    });
+}
+
 async function waitFor(page: Page, url: string, text: string | RegExp) {
   await expect(async () => {
     await page.goto(url);
@@ -91,7 +112,8 @@ test("the owner connects GitHub, and a push shows up as an Update within a minut
     await expect(page.getByText("Ship offline mode").first()).toBeVisible({ timeout: 1000 });
   }).toPass({ timeout: 60_000 });
   expect(Date.now() - started).toBeLessThan(60_000);
-  await expect(page.getByRole("link", { name: "#12 Dark mode" })).toBeVisible();
+  const offline = page.locator("li.update", { hasText: "Ship offline mode" });
+  await expect(offline.getByRole("link", { name: "#12 Dark mode" })).toBeVisible();
   await expect(page.getByText("alice@example.com")).toHaveCount(0);
 
   // A replay of the same delivery is ignored, and a bad signature is refused.
@@ -139,11 +161,13 @@ test("a feature push becomes AI-labelled draft posts with images, served only th
   page,
 }) => {
   const workspace = await signInAs(page, alice);
-  await sendPush(page, "e2e-push-feature", "f00d".padEnd(40, "1"), "feat: dark mode\n\nEasier on the eyes at night.");
-  await waitFor(page, `${workspace}/updates`, /Drafts ready/);
-  await expect(page.getByText("Worth a post").first()).toBeVisible();
-
+  const sha = "f00d".padEnd(40, "1");
+  await sendPush(page, "e2e-push-feature", sha, "feat: dark mode\n\nEasier on the eyes at night.");
+  await waitForGeneration(sha, "DONE");
+  await page.goto(`${workspace}/updates`);
   const feature = page.locator("li.update", { hasText: "feat: dark mode" });
+  await expect(feature.getByText("Worth a post")).toBeVisible();
+  await expect(feature.getByText("Drafts ready")).toBeVisible();
   await feature.getByRole("link", { name: "View 2 drafts" }).click();
   await expect(page.getByRole("heading", { name: "Draft posts" })).toBeVisible();
   const group = page.locator(new URL(page.url()).hash);
@@ -173,20 +197,17 @@ test("a feature push becomes AI-labelled draft posts with images, served only th
 
 test("a chore push is skipped, and the owner can choose to post about it anyway", async ({ page }) => {
   const workspace = await signInAs(page, alice);
-  await sendPush(page, "e2e-push-chore", "c40e".padEnd(40, "2"), "chore: update dependencies");
+  const sha = "c40e".padEnd(40, "2");
+  await sendPush(page, "e2e-push-chore", sha, "chore: update dependencies");
   await waitFor(page, `${workspace}/updates`, /Only maintenance commits/);
   const chore = page.locator("li.update", { hasText: "chore: update dependencies" });
   await expect(chore.getByText("Skipped")).toBeVisible();
   await chore.getByRole("button", { name: "Post about this anyway" }).click();
-  await waitFor(page, `${workspace}/updates`, /You chose to post about this update/);
-  await expect(async () => {
-    await page.reload();
-    await expect(
-      page.locator("li.update", { hasText: "chore: update dependencies" }).getByText("Drafts ready"),
-    ).toBeVisible({
-      timeout: 1000,
-    });
-  }).toPass({ timeout: 60_000 });
+  await waitForGeneration(sha, "DONE");
+  await page.goto(`${workspace}/updates`);
+  const chosen = page.locator("li.update", { hasText: "chore: update dependencies" });
+  await expect(chosen.getByText(/You chose to post about this update/)).toBeVisible();
+  await expect(chosen.getByText("Drafts ready")).toBeVisible();
 });
 
 test("another user cannot see the owner's app, repository or updates", async ({ page }) => {
