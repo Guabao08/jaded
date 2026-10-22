@@ -193,7 +193,7 @@ Status: [ ] built and tested locally; live check waits on the GitHub App and a p
 ---
 
 ## Phase 3 — Post generation (images)
-Status: [ ] built and tested locally; waiting on the owner's Gemini key for a live run (see notes)
+Status: [x] done (live Gemini check passed 2026-10-22; live pushes still need a public URL)
 
 **Goal:** each meaningful update becomes ready-to-review posts.
 
@@ -221,6 +221,7 @@ Status: [ ] built and tested locally; waiting on the owner's Gemini key for a li
 - AI labels and cost: every Post and Media is marked `aiGenerated`, with provider and model, and the Posts page shows an "AI-generated" badge. Each AI call is recorded in `AiUsage` with tokens and estimated cost at list price, even on the free tier. Generation stops at the monthly cap with a clear note. Free-tier limits: a 429 is turned into a wait using Google's retry delay (an hour for the daily quota), the job is rescheduled with backoff, and it gives up after six tries with a message.
 - Found and fixed: local Postgres on Windows was created with WIN1252 encoding, which can't store emoji or non-Latin text. New local databases are UTF-8, and `npm run dev:local` converts an existing local database automatically, keeping all rows and a backup.
 - Tests: Vitest unit and database tests (decisions, prompt and injection, output checks, Gemini errors and rate limits, cost, signed URLs, storage paths, image fetching and rendering, the pipeline including cap, rate limit, unsafe output, regenerate, emoji text and isolation, and the encoding conversion), plus Playwright tests: a feature push becomes AI-labelled drafts whose images load only through signed links; a chore push is skipped and can be overridden; another user gets 404 on the Posts page.
+- Reliability (2026-10-22): with the owner's key, `gemini-3.8-flash` at its default thinking level took over 90 s per reply and sometimes returned 503 UNAVAILABLE. The client now asks Gemini 3 models to think at a "low" level (about 20 s), limits each request to 45 s, retries timeouts and 500/503 errors up to three times with 1 s and 2 s waits, then falls back to `GEMINI_FALLBACK_MODEL` (default `gemini-3.5-flash-lite`, about 1 s, with its own free quota; also used on a rate limit). The model that answered is logged and saved on each post. `npm run check:ai` passed live, once on the main model and once through the fallback.
 - Waiting on the owner: add `GEMINI_API_KEY` to `app/.env` (aistudio.google.com/apikey), run `npm run check:ai`, then push to a connected repo. Live pushes still need a public URL or a tunnel.
 
 ---

@@ -56,6 +56,12 @@ export const envSchema = z
       .string()
       .regex(/^[a-z0-9.-]+$/, "must be a Gemini model ID such as gemini-3.8-flash")
       .default("gemini-3.8-flash"),
+    // Used when the main model stays unavailable or rate-limited. Set to "none" to turn off.
+    GEMINI_FALLBACK_MODEL: z
+      .string()
+      .regex(/^[a-z0-9.-]+$/, "must be a Gemini model ID such as gemini-3.5-flash-lite, or none")
+      .default("gemini-3.5-flash-lite")
+      .transform((v) => (v === "none" ? "" : v)),
     // Estimated AI spend allowed per workspace per calendar month (UTC), in US dollars.
     AI_MONTHLY_CAP_USD: z.coerce.number().min(0).max(1000).default(10),
     // Where generated images are stored until a cloud bucket is configured. Private; never served directly.

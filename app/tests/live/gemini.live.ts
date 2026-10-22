@@ -39,11 +39,13 @@ const input: PostWritingInput = {
 
 it.skipIf(!process.env.GEMINI_API_KEY)("Gemini writes normal posts and ignores an injected instruction", async () => {
   const model = process.env.GEMINI_MODEL || "gemini-3.8-flash";
-  const provider = createGeminiProvider({ apiKey: process.env.GEMINI_API_KEY!, model });
+  const fallbackModel =
+    process.env.GEMINI_FALLBACK_MODEL === "none" ? null : process.env.GEMINI_FALLBACK_MODEL || "gemini-3.5-flash-lite";
+  const provider = createGeminiProvider({ apiKey: process.env.GEMINI_API_KEY!, model, fallbackModel });
   const result = await provider.writePosts(buildPrompt(input), input);
   const posts = validateGeneratedPosts(result.raw, input);
   console.log(
-    `${model}: ${result.usage.inputTokens} tokens in, ${result.usage.outputTokens} out (≈ ${formatUsd(estimateCostMicro(model, result.usage))} at list price)`,
+    `${result.model}${result.model !== model ? ` (fallback; ${model} was unavailable)` : ""}: ${result.usage.inputTokens} tokens in, ${result.usage.outputTokens} out (≈ ${formatUsd(estimateCostMicro(result.model, result.usage))} at list price)`,
   );
   for (const p of posts.posts)
     console.log(`\n[${p.platform}] ${p.headline}\n${p.caption}\n${p.hashtags.map((h) => `#${h}`).join(" ")}`);
